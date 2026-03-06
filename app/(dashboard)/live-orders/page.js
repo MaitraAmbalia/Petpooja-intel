@@ -107,8 +107,8 @@ export default function LiveOrdersPage() {
             <div className="h-[calc(100vh-140px)] flex flex-col gap-8">
                 <div className="flex justify-between items-end">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Live Orders & Voice Analytics</h1>
-                        <p className="text-slate-500 font-medium">Monitoring real-time AI and Human call performance</p>
+                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Live Orders & Voice Analytics</h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">Monitoring real-time AI and Human call performance</p>
                     </div>
                     <div className="flex gap-2">
                         <button className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2">

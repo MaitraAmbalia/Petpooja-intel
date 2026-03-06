@@ -548,8 +548,8 @@ export default function EditMenuPage() {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Menu Management</h1>
-                        <p className="text-slate-400 font-medium mt-1">Configure your restaurant's digital menu with AI insights</p>
+                        <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Menu Management</h1>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Configure your restaurant's digital menu with AI insights</p>
                     </div>
                     <div className="flex gap-3">
                         <button
@@ -568,7 +568,7 @@ export default function EditMenuPage() {
                             <div className="bg-orange-500 p-1.5 rounded-lg shadow-lg shadow-orange-100">
                                 <Zap className="text-white w-4 h-4" />
                             </div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight uppercase">Strategic AI Bundles</h2>
+                            <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight uppercase">Strategic AI Bundles</h2>
                         </div>
                         <Badge variant="outline" className="border-orange-100 text-orange-600 font-black text-[10px] uppercase tracking-widest bg-orange-50 py-1">Optimized for Profit</Badge>
                     </div>
@@ -648,7 +648,7 @@ export default function EditMenuPage() {
                     {/* Left Sidebar: Categories */}
                     <div className="col-span-12 lg:col-span-3 space-y-4">
                         <div className="glass rounded-[32px] border border-slate-200/50 p-6 shadow-premium">
-                            <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                            <h2 className="text-xl font-black text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                                 <LayoutGrid size={20} /> Categories
                             </h2>
                             <div className="space-y-2">

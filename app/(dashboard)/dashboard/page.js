@@ -200,7 +200,13 @@ export default function DashboardPage() {
                                             tick={{ fontSize: 11, fontWeight: 500, fill: '#64748b' }}
                                             dy={15}
                                         />
-                                        <YAxis hide />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
+                                            tickFormatter={(value) => `₹${value}`}
+                                            dx={-10}
+                                        />
                                         <Tooltip
                                             formatter={(value) => [`$${Number(value).toFixed(2)}`, ""]}
                                             contentStyle={{
@@ -238,7 +244,19 @@ export default function DashboardPage() {
                             <div className="h-[140px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={REVENUE_HISTORY}>
-                                        <XAxis dataKey="date" hide />
+                                        <XAxis
+                                            dataKey="date"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
+                                            dx={-10}
+                                        />
                                         <Tooltip
                                             cursor={{ fill: '#f8fafc' }}
                                             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
@@ -254,14 +272,14 @@ export default function DashboardPage() {
                     <div className="w-full xl:w-96 space-y-6">
                         {/* Pulses Hub */}
                         <div className="grid grid-cols-2 gap-4">
-                            <Card className="border-none shadow-sm rounded-3xl p-6 bg-slate-900 text-white relative overflow-hidden h-36 flex flex-col justify-between">
+                            <Card className="border-none shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-3xl p-6 bg-white dark:bg-slate-900 text-slate-900 dark:text-white relative overflow-hidden h-36 flex flex-col justify-between transition-colors">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Today's Profit</p>
+                                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1">Today's Profit</p>
                                     <h4 className="text-2xl font-bold tracking-tight">₹{todayProfit.toFixed(2)}</h4>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <div className="p-2 bg-white/10 rounded-xl">
-                                        <TrendingUp size={16} className="text-emerald-400" />
+                                    <div className="p-2 bg-slate-50 dark:bg-white/10 rounded-xl transition-colors">
+                                        <TrendingUp size={16} className="text-emerald-500 dark:text-emerald-400 text-emerald-400" />
                                     </div>
                                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                 </div>
@@ -281,40 +299,40 @@ export default function DashboardPage() {
                         </div>
 
                         {/* Intelligence Card */}
-                        <Card className="border-none shadow-sm rounded-3xl p-7 bg-[#0f172a] text-white">
+                        <Card className="border-none shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-3xl p-7 bg-white dark:bg-[#0f172a] text-slate-900 dark:text-white transition-colors">
                             <div className="flex items-center gap-2 mb-8">
-                                <Sparkles size={16} className="text-orange-400" />
+                                <Sparkles size={16} className="text-orange-500 dark:text-orange-400" />
                                 <h3 className="font-bold text-xs uppercase tracking-widest">Menu Intelligence</h3>
                             </div>
 
                             <div className="space-y-6">
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Efficiency Peak</p>
-                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
+                                    <p className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">Best Performer</p>
+                                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">🔥</div>
+                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🔥</div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-semibold truncate leading-tight tracking-tight">{bestSeller.foodName}</p>
                                                 <p className="text-xs text-slate-500 font-medium mt-1">Pop: {bestSeller.popularityScore.toFixed(2)}</p>
                                             </div>
                                         </div>
-                                        <ChevronRight size={14} className="text-slate-700" />
+                                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                     </div>
                                 </div>
 
-                                <div className="h-px bg-white/5 w-full" />
+                                <div className="h-px bg-slate-100 dark:bg-white/5 w-full transition-colors" />
 
                                 <div className="space-y-3">
-                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Optimization Target</p>
-                                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between opacity-80">
+                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Least Performer</p>
+                                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between opacity-80 transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">🧊</div>
+                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🧊</div>
                                             <div className="min-w-0">
                                                 <p className="text-sm font-semibold truncate leading-tight tracking-tight">{worstSeller.foodName}</p>
                                                 <p className="text-xs text-slate-500 font-medium mt-1">Pop: {worstSeller.popularityScore.toFixed(2)}</p>
                                             </div>
                                         </div>
-                                        <ChevronRight size={14} className="text-slate-700" />
+                                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                     </div>
                                 </div>
                             </div>

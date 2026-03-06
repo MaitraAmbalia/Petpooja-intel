@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Home, UtensilsCrossed, MoveLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
+    const router = useRouter();
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
             <motion.div
@@ -44,14 +46,12 @@ export default function NotFound() {
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Button
-                        asChild
+                        onClick={() => router.back()}
                         variant="ghost"
-                        className="rounded-2xl h-14 px-8 text-slate-600 font-bold hover:bg-slate-200"
+                        className="rounded-2xl h-14 px-8 text-slate-600 font-bold hover:bg-slate-200 flex items-center gap-2"
                     >
-                        <Link href="javascript:history.back()" className="flex items-center gap-2">
-                            <MoveLeft size={18} />
-                            Go Back
-                        </Link>
+                        <MoveLeft size={18} />
+                        Go Back
                     </Button>
 
                     <Button

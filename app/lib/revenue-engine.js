@@ -108,16 +108,30 @@ export const recommendCombos = (classifiedItems, orderHistory) => {
  * @returns {Object} Price optimization suggestion
  */
 export const getPriceOptimization = (item) => {
+    let suggestedPrice = item.price;
+    let suggestion = "";
+    let confidence = "";
+
+    // Quantitative Price Elasticity Model
     if (item.classification === "Star") {
-        return { suggestion: "Maintain price or subtle increase", confidence: "High" };
+        suggestedPrice = Number((item.price * 1.05).toFixed(2)); // +5% (Inelastic demand)
+        suggestion = "Increase price (+5%)";
+        confidence = "High";
+    } else if (item.classification === "Workhorse") {
+        suggestedPrice = Number((item.price * 1.02).toFixed(2)); // +2% (Price sensitive)
+        suggestion = "Slight increase (+2%)";
+        confidence = "Medium";
+    } else if (item.classification === "Challenge") {
+        suggestedPrice = Number((item.price * 0.95).toFixed(2)); // -5% (Promotional to drive volume)
+        suggestion = "Discount (-5%)";
+        confidence = "High";
+    } else {
+        suggestedPrice = item.price;
+        suggestion = "Maintain / Re-evaluate";
+        confidence = "Low";
     }
-    if (item.classification === "Workhorse") {
-        return { suggestion: "Investigate cost reduction or combo bundling", confidence: "Medium" };
-    }
-    if (item.classification === "Challenge") {
-        return { suggestion: "Promote via Voice Copilot / Special Offers", confidence: "High" };
-    }
-    return { suggestion: "Consider removing or rebranding", confidence: "Low" };
+
+    return { suggestedPrice, suggestion, confidence };
 };
 
 /**

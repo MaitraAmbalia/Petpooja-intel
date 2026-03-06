@@ -2,6 +2,7 @@
 
 import DashboardLayout from "@/components/DashboardLayout";
 import { PROCESSED_MENU, STRATEGIC_COMBOS } from "@/lib/data-store";
+import { getPriceOptimization } from "@/lib/revenue-engine";
 import { motion } from "framer-motion";
 import {
     ScatterChart,
@@ -250,6 +251,7 @@ export default function MenuAnalyticsPage() {
                                     <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Margin %</th>
                                     <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Velocity</th>
                                     <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Classification</th>
+                                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-widest">Target Price</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -296,6 +298,12 @@ export default function MenuAnalyticsPage() {
                                                 }`}>
                                                 {item.classification}
                                             </span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm font-black text-slate-900">₹{getPriceOptimization(item).suggestedPrice}</span>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{getPriceOptimization(item).suggestion}</span>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))}

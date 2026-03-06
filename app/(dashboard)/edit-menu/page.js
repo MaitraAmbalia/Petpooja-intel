@@ -54,23 +54,355 @@ const Toggle = ({ active, onChange }) => (
     </button>
 );
 
+const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
+    if (!item) return null;
+
+    const [editData, setEditData] = useState({ ...item });
+
+    return (
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                    />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                    >
+                        {/* Modal Header */}
+                        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-900 leading-tight">Edit Item Detail</h2>
+                                <p className="text-slate-500 font-bold text-sm tracking-tight">Configure all properties for <span className="text-indigo-600">#{item.foodId}</span></p>
+                            </div>
+                            <button onClick={onClose} className="p-3 hover:bg-white rounded-2xl transition-all shadow-sm border border-slate-100">
+                                <Plus className="rotate-45 text-slate-400" size={24} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body - Scrollable */}
+                        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Basic Info */}
+                                <div className="space-y-6">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Basic Information</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={editData.foodName}
+                                                onChange={(e) => setEditData({...editData, foodName: e.target.value})}
+                                                className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Base Price</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={editData.price}
+                                                        onChange={(e) => setEditData({...editData, price: parseFloat(e.target.value)})}
+                                                        className="w-full pl-8 pr-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                    />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Category</label>
+                                                <select 
+                                                    value={editData.category}
+                                                    onChange={(e) => setEditData({...editData, category: e.target.value})}
+                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900 appearance-none bg-white"
+                                                >
+                                                    {CATEGORIES.filter(c => c.id !== 'all').map(c => (
+                                                        <option key={c.id} value={c.name}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Cost & Margin */}
+                                <div className="space-y-6">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Financials</h3>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Cost</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={editData.foodCost}
+                                                    onChange={(e) => setEditData({...editData, foodCost: parseFloat(e.target.value)})}
+                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Op Cost</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={editData.opCost}
+                                                    onChange={(e) => setEditData({...editData, opCost: parseFloat(e.target.value)})}
+                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex justify-between items-center">
+                                            <span className="text-sm font-bold text-emerald-700 uppercase tracking-wider">Projected Margin</span>
+                                            <span className="text-xl font-black text-emerald-600">${(editData.price - editData.foodCost - (editData.opCost || 0)).toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Ingredients Management */}
+                            <div className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ingredients List</h3>
+                                    <button 
+                                        onClick={() => setEditData({...editData, ingredients: [...(editData.ingredients || []), { name: "", quantity: "", unit: "g" }]})}
+                                        className="flex items-center gap-1 text-[10px] font-black text-indigo-600 uppercase"
+                                    >
+                                        <Plus size={14} /> Add Ingredient
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {editData.ingredients?.map((ing, i) => (
+                                        <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                            <input 
+                                                type="text" 
+                                                value={ing.name}
+                                                placeholder="Ingredient Name"
+                                                onChange={(e) => {
+                                                    const newIngs = [...editData.ingredients];
+                                                    newIngs[i].name = e.target.value;
+                                                    setEditData({...editData, ingredients: newIngs});
+                                                }}
+                                                className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
+                                            />
+                                            <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
+                                                <input 
+                                                    type="text" 
+                                                    value={ing.quantity}
+                                                    onChange={(e) => {
+                                                        const newIngs = [...editData.ingredients];
+                                                        newIngs[i].quantity = e.target.value;
+                                                        setEditData({...editData, ingredients: newIngs});
+                                                    }}
+                                                    className="w-12 text-center font-black text-xs text-slate-900 outline-none"
+                                                />
+                                                <select 
+                                                    value={ing.unit}
+                                                    onChange={(e) => {
+                                                        const newIngs = [...editData.ingredients];
+                                                        newIngs[i].unit = e.target.value;
+                                                        setEditData({...editData, ingredients: newIngs});
+                                                    }}
+                                                    className="text-[10px] font-black text-slate-400 uppercase bg-transparent outline-none"
+                                                >
+                                                    <option value="g">g</option>
+                                                    <option value="ml">ml</option>
+                                                    <option value="pcs">pcs</option>
+                                                    <option value="leaves">leaves</option>
+                                                </select>
+                                            </div>
+                                            <button 
+                                                onClick={() => setEditData({...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i)})}
+                                                className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Variants & Addons Management */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Variants */}
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sizes / Variants</h3>
+                                        <button 
+                                            onClick={() => setEditData({...editData, variants: [...(editData.variants || []), { name: "", price: 0 }]})}
+                                            className="flex items-center gap-1 text-[10px] font-black text-indigo-600 uppercase"
+                                        >
+                                            <Plus size={14} /> Add Size
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {editData.variants?.map((v, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
+                                                <input 
+                                                    type="text" 
+                                                    value={v.name}
+                                                    placeholder="Size Name"
+                                                    onChange={(e) => {
+                                                        const newVariants = [...editData.variants];
+                                                        newVariants[i].name = e.target.value;
+                                                        setEditData({...editData, variants: newVariants});
+                                                    }}
+                                                    className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
+                                                />
+                                                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                                                    <span className="text-[10px] font-black text-slate-400">$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={v.price}
+                                                        onChange={(e) => {
+                                                            const newVariants = [...editData.variants];
+                                                            newVariants[i].price = parseFloat(e.target.value) || 0;
+                                                            setEditData({...editData, variants: newVariants});
+                                                        }}
+                                                        className="w-16 bg-transparent font-black text-sm text-slate-900 outline-none text-right"
+                                                    />
+                                                </div>
+                                                <button 
+                                                    onClick={() => setEditData({...editData, variants: editData.variants.filter((_, idx) => idx !== i)})}
+                                                    className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors bg-slate-50 rounded-lg"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Addons */}
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Addons</h3>
+                                        <button 
+                                            onClick={() => setEditData({...editData, addons: [...(editData.addons || []), { name: "", price: 0 }]})}
+                                            className="flex items-center gap-1 text-[10px] font-black text-orange-600 uppercase"
+                                        >
+                                            <Plus size={14} /> Add Addon
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {editData.addons?.map((a, i) => (
+                                            <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-orange-400">
+                                                <input 
+                                                    type="text" 
+                                                    value={a.name}
+                                                    placeholder="Addon Name"
+                                                    onChange={(e) => {
+                                                        const newAddons = [...editData.addons];
+                                                        newAddons[i].name = e.target.value;
+                                                        setEditData({...editData, addons: newAddons});
+                                                    }}
+                                                    className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
+                                                />
+                                                <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                                                    <span className="text-[10px] font-black text-slate-400">+$</span>
+                                                    <input 
+                                                        type="number" 
+                                                        value={a.price}
+                                                        onChange={(e) => {
+                                                            const newAddons = [...editData.addons];
+                                                            newAddons[i].price = parseFloat(e.target.value) || 0;
+                                                            setEditData({...editData, addons: newAddons});
+                                                        }}
+                                                        className="w-12 bg-transparent font-black text-sm text-slate-900 outline-none text-right"
+                                                    />
+                                                </div>
+                                                <button 
+                                                    onClick={() => setEditData({...editData, addons: editData.addons.filter((_, idx) => idx !== i)})}
+                                                    className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors bg-slate-50 rounded-lg"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-4">
+                            <button onClick={onClose} className="px-8 py-3.5 rounded-2xl border border-slate-200 font-black text-sm text-slate-500 hover:bg-white transition-all">
+                                Discard Changes
+                            </button>
+                            <button 
+                                onClick={() => onSave(editData)}
+                                className="px-12 py-3.5 rounded-2xl bg-slate-900 text-white font-black text-sm shadow-xl hover:bg-slate-800 transition-all active:scale-95"
+                            >
+                                Save Changes
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 export default function EditMenuPage() {
     const [items, setItems] = useState(PROCESSED_MENU);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedItem, setSelectedItem] = useState(PROCESSED_MENU[0]);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAddingNew, setIsAddingNew] = useState(false);
     const [categoryStates, setCategoryStates] = useState(
         CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: true }), {})
     );
 
     const filteredItems = items.filter(item => {
         const matchesSearch = item.foodName.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === "all" || item.category.toLowerCase() === selectedCategory;
+        const matchesCategory = selectedCategory === "all" || item.category === catName(selectedCategory);
         return matchesSearch && matchesCategory;
     });
 
+    function catName(id) {
+        return CATEGORIES.find(c => c.id === id)?.name || id;
+    }
+
     // Reset selected item if it's no longer in filtered list, or keep first if available
     const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || filteredItems[0];
+
+    const handleSave = (updatedItem) => {
+        if (isAddingNew) {
+            setItems(prev => [...prev, { ...updatedItem, foodId: `sku_${Date.now()}` }]);
+        } else {
+            setItems(prev => prev.map(i => i.foodId === updatedItem.foodId ? updatedItem : i));
+        }
+        setIsEditModalOpen(false);
+        setIsAddingNew(false);
+    };
+
+    const handleDelete = (id) => {
+        if (confirm("Are you sure you want to delete this item?")) {
+            setItems(prev => prev.filter(i => i.foodId !== id));
+            if (selectedItem?.foodId === id) setSelectedItem(null);
+        }
+    };
+
+    const openAddModal = () => {
+        setSelectedItem({
+            foodName: "",
+            price: 0,
+            foodCost: 0,
+            opCost: 0,
+            category: CATEGORIES[1]?.name || "Mains",
+            dietType: "veg",
+            ingredients: [],
+            variants: [],
+            addons: []
+        });
+        setIsAddingNew(true);
+        setIsEditModalOpen(true);
+    };
 
     return (
         <DashboardLayout>
@@ -90,7 +422,10 @@ export default function EditMenuPage() {
                         <button className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 bg-white">
                             <CloudUpload size={18} /> Sync Menu
                         </button>
-                        <button className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+                        <button 
+                            onClick={openAddModal}
+                            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
+                        >
                             <Plus size={18} /> Add New Item
                         </button>
                     </div>
@@ -180,7 +515,10 @@ export default function EditMenuPage() {
                                 <button className="flex-1 sm:flex-none px-6 py-3.5 bg-white rounded-2xl border border-slate-200 font-bold text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                                     <Filter size={18} /> Advanced
                                 </button>
-                                <button className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm">
+                                <button 
+                                    onClick={openAddModal}
+                                    className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm"
+                                >
                                     <Plus size={18} /> New Item
                                 </button>
                             </div>
@@ -212,7 +550,9 @@ export default function EditMenuPage() {
                                                         exit={{ opacity: 0 }}
                                                         key={item.foodId}
                                                         className={`group cursor-pointer transition-all ${isSelected ? 'bg-slate-100/50' : 'hover:bg-slate-50/50'}`}
-                                                        onClick={() => setSelectedItem(item)}
+                                                        onClick={() => {
+                                                            setSelectedItem(item);
+                                                        }}
                                                     >
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
@@ -244,9 +584,26 @@ export default function EditMenuPage() {
                                                                 <button className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${item.popularityScore > 80 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
                                                                     On
                                                                 </button>
-                                                                <button className="p-2 hover:bg-white hover:shadow-md rounded-xl transition-all opacity-0 group-hover:opacity-100">
-                                                                    <Edit3 size={16} className="text-slate-400 hover:text-slate-900" />
-                                                                </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleDelete(item.foodId);
+                                                                        }}
+                                                                        className="p-2 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                                    >
+                                                                        <Trash2 size={16} className="text-slate-400 hover:text-rose-500" />
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setSelectedItem(item);
+                                                                            setIsAddingNew(false);
+                                                                            setIsEditModalOpen(true);
+                                                                        }}
+                                                                        className="p-2 hover:bg-white hover:shadow-md rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                                    >
+                                                                        <Edit3 size={16} className="text-slate-400 hover:text-slate-900" />
+                                                                    </button>
                                                             </div>
                                                         </td>
                                                     </motion.tr>
@@ -336,6 +693,13 @@ export default function EditMenuPage() {
                     </div>
                 </div>
             </div>
+
+            <EditItemModal 
+                item={selectedItem} 
+                isOpen={isEditModalOpen} 
+                onClose={() => setIsEditModalOpen(false)} 
+                onSave={handleSave}
+            />
         </DashboardLayout>
     );
 }

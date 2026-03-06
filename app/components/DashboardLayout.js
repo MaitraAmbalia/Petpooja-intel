@@ -96,7 +96,8 @@ export default function DashboardLayout({ children }) {
                 initial={false}
                 animate={{ width: isSidebarOpen ? 240 : 0 }}
                 className={cn(
-                    "flex flex-col border-r border-[#e2e8f0] bg-white z-30 transition-all overflow-hidden",
+                    "flex flex-col border-r z-30 transition-all overflow-hidden",
+                    isDarkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-[#e2e8f0] text-slate-900",
                     !isSidebarOpen && "border-none"
                 )}
             >
@@ -105,7 +106,7 @@ export default function DashboardLayout({ children }) {
                         <div className="bg-orange-500 p-1.5 rounded-lg">
                             <UtensilsCrossed className="text-white w-5 h-5" />
                         </div>
-                        <span className="font-extrabold text-lg tracking-tight">Restoboard</span>
+                        <span className={cn("font-extrabold text-lg tracking-tight", isDarkMode ? "text-white" : "text-slate-900")}>Restoboard</span>
                     </div>
                 </div>
 
@@ -118,10 +119,10 @@ export default function DashboardLayout({ children }) {
                                     <div className={cn(
                                         "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group cursor-pointer font-medium text-sm",
                                         isActive
-                                            ? "bg-orange-500 text-white shadow-lg shadow-orange-100"
-                                            : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                            ? "bg-orange-500 text-white shadow-lg shadow-orange-100 dark:shadow-none"
+                                            : cn("transition-all", isDarkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")
                                     )}>
-                                        <item.icon size={20} className={cn(isActive ? "text-white" : "text-slate-400 group-hover:text-slate-600")} />
+                                        <item.icon size={20} className={cn(isActive ? "text-white" : (isDarkMode ? "text-slate-500 group-hover:text-slate-300" : "text-slate-400 group-hover:text-slate-600"))} />
                                         <span>{item.name}</span>
                                         {item.badge && (
                                             <span className="ml-auto bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-lg text-[10px] font-bold">{item.badge}</span>
@@ -134,7 +135,7 @@ export default function DashboardLayout({ children }) {
                 </nav>
 
                 <div className="p-4">
-                    <Button variant="ghost" onClick={() => signOut({ callbackUrl: "/login" })} className="w-full justify-start gap-3 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl">
+                    <Button variant="ghost" onClick={() => signOut({ callbackUrl: "/login" })} className={cn("w-full justify-start gap-3 rounded-xl transition-all", isDarkMode ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-400 hover:text-red-500 hover:bg-red-50")}>
                         <LogOut size={20} />
                         <span className="text-sm font-medium">Log out</span>
                     </Button>
@@ -195,13 +196,13 @@ export default function DashboardLayout({ children }) {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                                         className={cn(
-                                            "absolute right-0 top-full mt-2 w-80 rounded-[24px] border shadow-premium overflow-hidden",
-                                            isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                                            "absolute right-0 top-full mt-2 w-80 rounded-[24px] border shadow-premium overflow-hidden z-50",
+                                            isDarkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-100 text-slate-900"
                                         )}
                                     >
                                         <div className={cn("p-4 border-b flex justify-between items-center", isDarkMode ? "border-slate-800" : "border-slate-50")}>
                                             <span className={cn("text-xs font-black uppercase tracking-widest", isDarkMode ? "text-slate-400" : "text-slate-900")}>Notifications</span>
-                                            <Badge variant="outline" className="text-[9px] font-black">{notifications.length} New</Badge>
+                                            <Badge variant="outline" className={cn("text-[9px] font-black", isDarkMode ? "border-slate-700 text-white" : "")}>{notifications.length} New</Badge>
                                         </div>
                                         <div className="p-2 space-y-1">
                                             {notifications.map(n => (

@@ -119,7 +119,7 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <MetricCard
                                 title="Revenue"
-                                value="$89,935.00"
+                                value="₹89,935.00"
                                 trend={1.01}
                                 subValue="this week"
                                 icon={DollarSign}
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                             />
                             <MetricCard
                                 title="Net Profit"
-                                value="$24,360.00"
+                                value="₹24,360.00"
                                 trend={2.40}
                                 subValue="this week"
                                 icon={TrendingUp}
@@ -137,7 +137,7 @@ export default function DashboardPage() {
                             />
                             <MetricCard
                                 title="Operating Cost"
-                                value="$65,575.00"
+                                value="₹65,575.00"
                                 trend={-0.92}
                                 subValue="this week"
                                 icon={Activity}
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                             <Card className="border-none shadow-sm rounded-3xl p-6 bg-slate-900 text-white relative overflow-hidden h-36 flex flex-col justify-between">
                                 <div>
                                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Today's Profit</p>
-                                    <h4 className="text-2xl font-bold tracking-tight">${todayProfit.toFixed(2)}</h4>
+                                    <h4 className="text-2xl font-bold tracking-tight">₹{todayProfit.toFixed(2)}</h4>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="p-2 bg-white/10 rounded-xl">

@@ -18,7 +18,7 @@ export default function DashboardPage() {
       
       {/* Top Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <MetricCard title="Total Revenue" amount="$89,935" trend="+1.01%" isUp={true} icon={DollarSign} />
+        <MetricCard title="Total Revenue" amount="₹89,935" trend="+1.01%" isUp={true} icon={DollarSign} />
         <MetricCard title="Total Customers" amount="23,283.5" trend="+0.49%" isUp={true} icon={Users} />
         <MetricCard title="Total Orders" amount="46,827" trend="-0.91%" isUp={false} icon={ShoppingBag} />
       </div>
@@ -29,7 +29,7 @@ export default function DashboardPage() {
         <div className="bg-[#fff7ed] p-6 rounded-lg mb-6 flex justify-between items-center">
           <div>
             <p className="text-sm text-gray-500 mb-1">Average Monthly Income</p>
-            <p className="text-3xl font-bold text-gray-900">$134,789</p>
+            <p className="text-3xl font-bold text-gray-900">₹134,789</p>
             <div className="flex items-center gap-1 text-sm text-green-600 mt-2 font-medium">
                <ArrowUpRight size={16} /> 34.6% <span className="text-gray-400 font-normal">vs previous month</span>
             </div>

@@ -55,10 +55,10 @@ const ComboPanel = ({ title, icon: Icon, combos, colorClass }) => (
                     </div>
                     <div className="flex justify-between items-center text-xs">
                         <div className="flex items-baseline gap-2">
-                            <span className="font-black text-slate-900 text-sm">${combo.discountedPrice}</span>
-                            <span className="text-slate-400 line-through">${combo.basePrice}</span>
+                            <span className="font-black text-slate-900 text-sm">₹{combo.discountedPrice}</span>
+                            <span className="text-slate-400 line-through">₹{combo.basePrice}</span>
                         </div>
-                        <span className="text-emerald-600 font-bold uppercase tracking-tighter">Profit +${combo.newMargin}</span>
+                        <span className="text-emerald-600 font-bold uppercase tracking-tighter">Profit +₹{combo.newMargin}</span>
                     </div>
                 </div>
             ))}
@@ -102,9 +102,9 @@ export default function MenuAnalyticsPage() {
                                         type="number"
                                         dataKey="margin"
                                         name="Profit Margin"
-                                        unit="$"
+                                        unit="₹"
                                         domain={[0, 12]}
-                                        label={{ value: 'Margin ($) →', angle: -90, position: 'left', fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+                                        label={{ value: 'Margin (₹) →', angle: -90, position: 'left', fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
                                     />
                                     <Tooltip
                                         cursor={{ strokeDasharray: '3 3' }}
@@ -116,7 +116,7 @@ export default function MenuAnalyticsPage() {
                                                         <p className="font-bold text-slate-900">{data.foodName}</p>
                                                         <p className="text-xs font-semibold text-orange-500 uppercase">{data.classification}</p>
                                                         <div className="mt-2 text-sm text-slate-500">
-                                                            <p>Margin: ${data.margin.toFixed(2)}</p>
+                                                            <p>Margin: ₹{data.margin.toFixed(2)}</p>
                                                             <p>Popularity: {data.popularityScore.toFixed(2)}</p>
                                                         </div>
                                                     </div>
@@ -238,9 +238,9 @@ export default function MenuAnalyticsPage() {
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2 font-bold">
-                                                <span className="text-slate-400 text-xs">${item.foodCost}</span>
+                                                <span className="text-slate-400 text-xs">₹{item.foodCost}</span>
                                                 <ChevronRight size={14} className="text-slate-300" />
-                                                <span className="text-slate-900">${item.price}</span>
+                                                <span className="text-slate-900">₹{item.price}</span>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">

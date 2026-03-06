@@ -6,15 +6,15 @@ import { Sparkles, Plus, Edit, Trash2, Check, ArrowRight } from "lucide-react";
 
 // Mock data combining standard items and AI suggestions
 const initialMenu = [
-  { id: "sku_101", name: "Classic Burger", price: "$12.00", category: "Mains", type: "standard" },
-  { id: "sku_102", name: "Truffle Fries", price: "$6.00", category: "Sides", type: "standard" },
+  { id: "sku_101", name: "Classic Burger", price: "₹12.00", category: "Mains", type: "standard" },
+  { id: "sku_102", name: "Truffle Fries", price: "₹6.00", category: "Sides", type: "standard" },
 ];
 
 const aiSuggestions = [
   { 
     id: "ai_combo_1", 
     name: "Spicy Burger Bundle", 
-    price: "$16.50", 
+    price: "₹16.50", 
     components: ["Classic Burger", "Truffle Fries", "Coke"],
     reason: "Increases AOV by 18% during lunch hours." 
   },

@@ -25,7 +25,7 @@ import {
     Target,
     ShoppingBag
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const iconMap = {
     LayoutGrid,
@@ -125,7 +125,7 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                             <div>
                                                 <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Base Price</label>
                                                 <div className="relative">
-                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
                                                     <input
                                                         type="number"
                                                         value={editData.price}
@@ -176,7 +176,7 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                         </div>
                                         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex justify-between items-center">
                                             <span className="text-sm font-bold text-emerald-700 uppercase tracking-wider">Projected Margin</span>
-                                            <span className="text-xl font-black text-emerald-600">${(editData.price - editData.foodCost - (editData.opCost || 0)).toFixed(2)}</span>
+                                            <span className="text-xl font-black text-emerald-600">₹{(editData.price - editData.foodCost - (editData.opCost || 0)).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -272,7 +272,7 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                                     className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
                                                 />
                                                 <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
-                                                    <span className="text-[10px] font-black text-slate-400">$</span>
+                                                    <span className="text-[10px] font-black text-slate-400">₹</span>
                                                     <input
                                                         type="number"
                                                         value={v.price}
@@ -321,7 +321,7 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                                     className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
                                                 />
                                                 <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
-                                                    <span className="text-[10px] font-black text-slate-400">+$</span>
+                                                    <span className="text-[10px] font-black text-slate-400">+₹</span>
                                                     <input
                                                         type="number"
                                                         value={a.price}
@@ -366,34 +366,78 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
 };
 
 export default function EditMenuPage() {
-    const [items, setItems] = useState(PROCESSED_MENU);
+    const [items, setItems] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedItem, setSelectedItem] = useState(PROCESSED_MENU[0]);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddingNew, setIsAddingNew] = useState(false);
     const [categoryStates, setCategoryStates] = useState(
         CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: true }), {})
     );
+    const [isLoading, setIsLoading] = useState(true);
 
-    const handleActivateCombo = (combo) => {
+    useEffect(() => {
+        fetchMenuData();
+    }, []);
+
+    const fetchMenuData = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/menu');
+            const result = await res.json();
+            if (result.success) {
+                setItems(result.data);
+                // Set first item as selected by default if we have data and none selected
+                if (result.data.length > 0 && !selectedItem) {
+                    setSelectedItem(result.data[0]);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch menu items:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleActivateCombo = async (combo) => {
+        const totalFoodCost = combo.items.reduce((acc, i) => acc + (i.foodCost || 0), 0);
+        const totalOpCost = combo.items.reduce((acc, i) => acc + (i.opCost || 0), 0);
+        const calculatedMargin = combo.discountedPrice - totalFoodCost - totalOpCost;
+
         const newComboItem = {
             foodId: `combo_${Date.now()}`,
             foodName: combo.name,
             price: combo.discountedPrice,
-            foodCost: combo.items.reduce((acc, i) => acc + i.foodCost, 0),
-            margin: combo.newMargin,
-            category: "Combos", // New category for active combos
+            foodCost: totalFoodCost,
+            opCost: totalOpCost,
+            margin: calculatedMargin,
+            category: "Combos",
             dietType: combo.items.some(i => i.dietType === 'non-veg') ? 'non-veg' : 'veg',
             isVeg: !combo.items.some(i => i.dietType === 'non-veg'),
-            popularityScore: 100, // New combos start with high visibility
+            popularityScore: 100,
+            status: true,
             orderHistory: [0, 0, 0],
             ingredients: combo.items.flatMap(i => i.ingredients),
             variants: [{ name: "Standard", price: combo.discountedPrice }],
             addons: combo.items.flatMap(i => i.addons)
         };
-        setItems(prev => [newComboItem, ...prev]);
-        alert(`Strategic Bundle "${combo.name}" has been activated and added to your menu!`);
+
+        try {
+            const res = await fetch('/api/menu', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newComboItem)
+            });
+            const result = await res.json();
+            if (result.success) {
+                setItems(prev => [result.data, ...prev]);
+                alert(`Strategic Bundle "${combo.name}" has been activated and added to your menu!`);
+            }
+        } catch (error) {
+            console.error("Error saving combo:", error);
+            alert("Failed to activate combo in database.");
+        }
     };
 
     const filteredItems = items.filter(item => {
@@ -407,29 +451,71 @@ export default function EditMenuPage() {
         return CATEGORIES.find(c => c.id === id)?.name || id;
     }
 
-    const handleToggleStatus = (id) => {
-        setItems(prev => prev.map(item =>
-            item.foodId === id ? { ...item, status: !item.status } : item
-        ));
-    };
+    const handleToggleStatus = async (item) => {
+        const newStatus = !item.status;
+        try {
+            const res = await fetch('/api/menu', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ foodId: item.foodId, status: newStatus })
+            });
 
-    // Reset selected item if it's no longer in filtered list, or keep first if available
-    const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || filteredItems[0];
-
-    const handleSave = (updatedItem) => {
-        if (isAddingNew) {
-            setItems(prev => [...prev, { ...updatedItem, foodId: `sku_${Date.now()}` }]);
-        } else {
-            setItems(prev => prev.map(i => i.foodId === updatedItem.foodId ? updatedItem : i));
+            if (res.ok) {
+                setItems(prev => prev.map(i =>
+                    i.foodId === item.foodId ? { ...i, status: newStatus } : i
+                ));
+            }
+        } catch (error) {
+            console.error("Failed to toggle status:", error);
         }
-        setIsEditModalOpen(false);
-        setIsAddingNew(false);
     };
 
-    const handleDelete = (id) => {
+    const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || (filteredItems.length > 0 ? filteredItems[0] : null);
+
+    const handleSave = async (updatedItem) => {
+        try {
+            if (isAddingNew) {
+                // Ensure it gets a unique ID if it doesn't have one
+                const itemToSave = { ...updatedItem, foodId: updatedItem.foodId || `sku_${Date.now()}` };
+                const res = await fetch('/api/menu', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemToSave)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    setItems(prev => [...prev, result.data]);
+                }
+            } else {
+                const res = await fetch('/api/menu', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedItem)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    setItems(prev => prev.map(i => i.foodId === updatedItem.foodId ? result.data : i));
+                }
+            }
+            setIsEditModalOpen(false);
+            setIsAddingNew(false);
+        } catch (error) {
+            console.error("Failed to save item:", error);
+            alert("Error saving your item.");
+        }
+    };
+
+    const handleDelete = async (id) => {
         if (confirm("Are you sure you want to delete this item?")) {
-            setItems(prev => prev.filter(i => i.foodId !== id));
-            if (selectedItem?.foodId === id) setSelectedItem(null);
+            try {
+                const res = await fetch(`/api/menu?foodId=${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    setItems(prev => prev.filter(i => i.foodId !== id));
+                    if (selectedItem?.foodId === id) setSelectedItem(null);
+                }
+            } catch (error) {
+                console.error("Delete failed:", error);
+            }
         }
     };
 
@@ -521,13 +607,13 @@ export default function EditMenuPage() {
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing</p>
                                         <div className="flex items-baseline gap-2">
-                                            <span className="text-lg font-black text-slate-900">${combo.discountedPrice}</span>
-                                            <span className="text-xs font-bold text-slate-400 line-through">${combo.basePrice}</span>
+                                            <span className="text-lg font-black text-slate-900">₹{combo.discountedPrice}</span>
+                                            <span className="text-xs font-bold text-slate-400 line-through">₹{combo.basePrice}</span>
                                         </div>
                                     </div>
                                     <div className="text-right space-y-1">
                                         <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Combo Margin</p>
-                                        <p className="text-lg font-black text-emerald-600">+${combo.newMargin}</p>
+                                        <p className="text-lg font-black text-emerald-600">+₹{combo.newMargin}</p>
                                     </div>
                                 </div>
 
@@ -565,27 +651,9 @@ export default function EditMenuPage() {
                                                 </div>
                                                 <span className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-600'}`}>{cat.name}</span>
                                             </div>
-                                            <div onClick={(e) => e.stopPropagation()}>
-                                                <Toggle
-                                                    active={categoryStates[cat.id]}
-                                                    onChange={() => setCategoryStates(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
-                                                />
-                                            </div>
                                         </div>
                                     );
                                 })}
-                            </div>
-                        </div>
-
-                        {/* Quick Stats or Help Card */}
-                        <div className="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl relative overflow-hidden group">
-                            <div className="relative z-10">
-                                <h3 className="font-black text-lg mb-2 italic">Pro Tip!</h3>
-                                <p className="text-indigo-100 text-sm font-medium">Use Bulk Edit to update prices across all categories in seconds.</p>
-                                <button className="mt-4 px-4 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black uppercase hover:scale-105 transition-transform">Get Started</button>
-                            </div>
-                            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
-                                <Database size={120} />
                             </div>
                         </div>
                     </div>
@@ -664,13 +732,13 @@ export default function EditMenuPage() {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-black text-slate-900">${item.price?.toFixed(2)}</span>
+                                                            <span className="font-black text-slate-900">₹{item.price?.toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-bold text-emerald-600">${item.margin?.toFixed(2)}</span>
+                                                            <span className="font-bold text-emerald-600">₹{item.margin?.toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-bold text-slate-500">${item.opCost?.toFixed(2)}</span>
+                                                            <span className="font-bold text-slate-500">₹{item.opCost?.toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center justify-end gap-3">
@@ -727,6 +795,6 @@ export default function EditMenuPage() {
                 onClose={() => setIsEditModalOpen(false)}
                 onSave={handleSave}
             />
-        </DashboardLayout>
+        </DashboardLayout >
     );
 }

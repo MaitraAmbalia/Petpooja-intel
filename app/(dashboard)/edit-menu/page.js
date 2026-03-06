@@ -26,6 +26,7 @@ import {
     ShoppingBag
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 const iconMap = {
     LayoutGrid,
@@ -73,9 +74,15 @@ const Toggle = ({ active, onChange }) => (
 );
 
 const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
-    if (!item) return null;
+    const [editData, setEditData] = useState(item || {});
 
-    const [editData, setEditData] = useState({ ...item });
+    useEffect(() => {
+        if (item) {
+            setEditData({ ...item });
+        }
+    }, [item]);
+
+    if (!item) return null;
 
     return (
         <AnimatePresence>
@@ -567,64 +574,73 @@ export default function EditMenuPage() {
                     </div>
 
                     <div className="flex gap-6 overflow-x-auto pb-4 px-2 custom-scrollbar snap-x">
-                        {Object.values(STRATEGIC_COMBOS).flat().map((combo, idx) => (
-                            <motion.div
-                                key={combo.id}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                className="min-w-[380px] flex-shrink-0 bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm hover:shadow-premium transition-all group snap-start relative overflow-hidden"
-                            >
-
-
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="space-y-1">
-                                        <Badge className="bg-slate-900 text-white border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
-                                            {combo.strategy}
-                                        </Badge>
-                                        <h3 className="text-lg font-black text-slate-900">{combo.name}</h3>
-                                    </div>
-                                    <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-2xl text-xs font-black">
-                                        -{combo.discount}%
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 mb-6">
-                                    {combo.items.map((item, i) => (
-                                        <div key={item.foodId} className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg">
-                                                {item.category === 'Beverage' ? '🥤' : item.category === 'Dessert' ? '🍰' : '🍔'}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-900">{item.foodName}</p>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.category}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center">
-                                    <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing</p>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-lg font-black text-slate-900">₹{combo.discountedPrice}</span>
-                                            <span className="text-xs font-bold text-slate-400 line-through">₹{combo.basePrice}</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right space-y-1">
-                                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Combo Margin</p>
-                                        <p className="text-lg font-black text-emerald-600">+₹{combo.newMargin}</p>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => handleActivateCombo(combo)}
-                                    className="w-full mt-4 py-3 bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                        {Object.values(STRATEGIC_COMBOS).flat().map((combo, idx) => {
+                            const isAlreadyApplied = items.some(i => i.foodName === combo.name);
+                            return (
+                                <motion.div
+                                    key={combo.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="min-w-[380px] flex-shrink-0 bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm hover:shadow-premium transition-all group snap-start relative overflow-hidden"
                                 >
-                                    Click to Activate Bundle
-                                </button>
-                            </motion.div>
-                        ))}
+
+
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="space-y-1">
+                                            <Badge className="bg-slate-900 text-white border-none text-[9px] font-black uppercase tracking-widest px-2 py-0.5">
+                                                {combo.strategy}
+                                            </Badge>
+                                            <h3 className="text-lg font-black text-slate-900">{combo.name}</h3>
+                                        </div>
+                                        <div className="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-2xl text-xs font-black">
+                                            -{combo.discount}%
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 mb-6">
+                                        {combo.items.map((item, i) => (
+                                            <div key={item.foodId} className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg">
+                                                    {item.category === 'Beverage' ? '🥤' : item.category === 'Dessert' ? '🍰' : '🍔'}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-900">{item.foodName}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.category}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="p-4 bg-slate-50 rounded-2xl flex justify-between items-center">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pricing</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-lg font-black text-slate-900">₹{combo.discountedPrice}</span>
+                                                <span className="text-xs font-bold text-slate-400 line-through">₹{combo.basePrice}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right space-y-1">
+                                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Combo Margin</p>
+                                            <p className="text-lg font-black text-emerald-600">+₹{combo.newMargin}</p>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => !isAlreadyApplied && handleActivateCombo(combo)}
+                                        disabled={isAlreadyApplied}
+                                        className={cn(
+                                            "w-full mt-4 py-3 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm",
+                                            isAlreadyApplied
+                                                ? "bg-emerald-50 text-emerald-600 cursor-not-allowed border border-emerald-100"
+                                                : "bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white active:scale-95"
+                                        )}
+                                    >
+                                        {isAlreadyApplied ? "Already Applied ✓" : "Click to Activate Bundle"}
+                                    </button>
+                                </motion.div>
+                            )
+                        })}
                     </div>
                 </div>
 

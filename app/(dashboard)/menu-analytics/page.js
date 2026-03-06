@@ -167,6 +167,35 @@ export default function MenuAnalyticsPage() {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Price Optimization Strategies */}
+                        <div className="gradient-primary p-8 rounded-[32px] text-white shadow-premium relative overflow-hidden">
+                            <TrendingUp className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10" />
+                            <h3 className="text-xl font-bold mb-6 italic">Price Optimization</h3>
+                            <div className="space-y-4 relative z-10">
+                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                        <h4 className="font-bold text-sm tracking-widest uppercase">Stars (High Demand)</h4>
+                                    </div>
+                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Inelastic demand detected. Consider testing a <span className="font-black text-white px-1 py-0.5 bg-white/20 rounded">+5% to +8%</span> price increase to maximize margins.</p>
+                                </div>
+                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                        <h4 className="font-bold text-sm tracking-widest uppercase">Workhorses (Staples)</h4>
+                                    </div>
+                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Highly sensitive to price changes. Maintain current pricing but strictly optimize supply chain food costs.</p>
+                                </div>
+                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-2 h-2 rounded-full bg-orange-400" />
+                                        <h4 className="font-bold text-sm tracking-widest uppercase">Challenges (High Profit)</h4>
+                                    </div>
+                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Bundle with Workhorses or offer limited-time promotions to boost trial rates and overall ticket size.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

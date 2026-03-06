@@ -9,15 +9,19 @@ export const metadata = {
   description: "AI-Powered Revenue Intelligence and Voice Ordering for Restaurants",
 };
 
+import { ThemeProvider } from "./components/ThemeProvider";
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <AuthProviders>
-          <div className="min-h-screen bg-slate-50">
-            {children}
-          </div>
-        </AuthProviders>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <AuthProviders>
+            <div className="min-h-screen bg-slate-50 transition-colors duration-300 dark:bg-slate-950">
+              {children}
+            </div>
+          </AuthProviders>
+        </ThemeProvider>
       </body>
     </html>
   );

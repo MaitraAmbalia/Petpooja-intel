@@ -25,6 +25,7 @@ import {
     Circle
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,7 @@ const sidebarGroups = [
             { name: "Menu", icon: UtensilsCrossed, path: "/edit-menu" },
             { name: "Orders", icon: PhoneCall, path: "/live-orders", badge: 89 },
             { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
-            { name: "Messages", icon: Bell, path: "/messages" },
             { name: "Teams", icon: UserCircle, path: "/teams" },
-            { name: "Settings", icon: Settings, path: "/settings" },
         ]
     }
 ];
@@ -53,13 +52,22 @@ export default function DashboardLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    // Determine dark mode state securely after mount
+    const isDarkMode = mounted && theme === 'dark';
+
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState([
         { id: 1, title: "Call Accepted", desc: "AI successfully handled call from Rahul", type: "success", time: "2m ago" },
         { id: 2, title: "Transfer Requested", desc: "Customer Priya requested human agent", type: "warning", time: "5m ago" },
         { id: 3, title: "Call Rejected", desc: "Spam call detected and blocked", type: "error", time: "12m ago" },
     ]);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -162,7 +170,7 @@ export default function DashboardLayout({ children }) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            onClick={() => setTheme(isDarkMode ? 'light' : 'dark')}
                             className={cn("rounded-2xl transition-all", isDarkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-50 text-slate-400")}
                         >
                             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}

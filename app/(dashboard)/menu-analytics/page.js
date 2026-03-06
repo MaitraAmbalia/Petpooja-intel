@@ -74,8 +74,8 @@ export default function MenuAnalyticsPage() {
         <DashboardLayout>
             <div className="space-y-8">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Menu Analytics</h1>
-                    <p className="text-slate-500 font-medium">SKU performance and profitability matrix</p>
+                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Menu Analytics</h1>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">SKU performance and profitability matrix</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -146,21 +146,21 @@ export default function MenuAnalyticsPage() {
                     <div className="space-y-6">
 
 
-                        <div className="glass p-8 rounded-[32px] border border-slate-200/50 shadow-premium">
-                            <h3 className="text-lg font-bold text-slate-900 mb-6 italic">SKU Health Summary</h3>
-                            <div className="space-y-4">
+                        <div className="glass p-5 rounded-2xl border border-slate-200/50 shadow-premium">
+                            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3 italic">SKU Health Summary</h3>
+                            <div className="space-y-2">
                                 {[
                                     { label: 'High Velocity (Stars)', count: PROCESSED_MENU.filter(i => i.classification === 'Star').length, color: 'emerald', hex: '#10b981' },
                                     { label: 'Under-promoted (Challenges)', count: PROCESSED_MENU.filter(i => i.classification === 'Challenge').length, color: 'orange', hex: '#f97316' },
                                     { label: 'Volume Staple (Workhorses)', count: PROCESSED_MENU.filter(i => i.classification === 'Workhorse').length, color: 'blue', hex: '#0ea5e9' },
                                     { label: 'Underperforming (Dogs)', count: PROCESSED_MENU.filter(i => i.classification === 'Dog').length, color: 'slate', hex: '#94a3b8' },
                                 ].map((stat, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.hex }} />
-                                            <span className="text-sm font-semibold text-slate-600">{stat.label}</span>
+                                    <div key={i} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stat.hex }} />
+                                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{stat.label}</span>
                                         </div>
-                                        <span className={`text-sm font-bold text-${stat.color}-600 bg-${stat.color}-50 px-3 py-1 rounded-lg`}>
+                                        <span className={`text-xs font-bold text-${stat.color}-600 bg-${stat.color}-50 dark:bg-${stat.color}-900/30 px-2 py-0.5 rounded-md`}>
                                             {stat.count}
                                         </span>
                                     </div>
@@ -169,30 +169,30 @@ export default function MenuAnalyticsPage() {
                         </div>
 
                         {/* Price Optimization Strategies */}
-                        <div className="gradient-primary p-8 rounded-[32px] text-white shadow-premium relative overflow-hidden">
-                            <TrendingUp className="absolute -right-4 -bottom-4 w-32 h-32 opacity-10" />
-                            <h3 className="text-xl font-bold mb-6 italic">Price Optimization</h3>
-                            <div className="space-y-4 relative z-10">
-                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                                    <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-slate-900 p-5 rounded-2xl text-white shadow-premium relative overflow-hidden">
+                            <TrendingUp className="absolute -right-2 -bottom-2 w-24 h-24 opacity-10" />
+                            <h3 className="text-base font-bold mb-3 italic">Price Optimization</h3>
+                            <div className="space-y-2 relative z-10">
+                                <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1.5">
                                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                        <h4 className="font-bold text-sm tracking-widest uppercase">Stars (High Demand)</h4>
+                                        <h4 className="font-bold text-[11px] tracking-widest uppercase">Stars (High Demand)</h4>
                                     </div>
-                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Inelastic demand detected. Consider testing a <span className="font-black text-white px-1 py-0.5 bg-white/20 rounded">+5% to +8%</span> price increase to maximize margins.</p>
+                                    <p className="text-[10px] font-medium text-white/90 leading-relaxed">Inelastic demand detected. Consider testing a <span className="font-black text-white px-1 py-0.5 bg-white/20 rounded">+5% to +8%</span> price increase to maximize margins.</p>
                                 </div>
-                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                                    <div className="flex items-center gap-2 mb-2">
+                                <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1.5">
                                         <div className="w-2 h-2 rounded-full bg-blue-400" />
-                                        <h4 className="font-bold text-sm tracking-widest uppercase">Workhorses (Staples)</h4>
+                                        <h4 className="font-bold text-[11px] tracking-widest uppercase">Workhorses (Staples)</h4>
                                     </div>
-                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Highly sensitive to price changes. Maintain current pricing but strictly optimize supply chain food costs.</p>
+                                    <p className="text-[10px] font-medium text-white/90 leading-relaxed">Highly sensitive to price changes. Maintain current pricing but strictly optimize supply chain food costs.</p>
                                 </div>
-                                <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-sm border border-white/5">
-                                    <div className="flex items-center gap-2 mb-2">
+                                <div className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/5">
+                                    <div className="flex items-center gap-2 mb-1.5">
                                         <div className="w-2 h-2 rounded-full bg-orange-400" />
-                                        <h4 className="font-bold text-sm tracking-widest uppercase">Challenges (High Profit)</h4>
+                                        <h4 className="font-bold text-[11px] tracking-widest uppercase">Challenges (High Profit)</h4>
                                     </div>
-                                    <p className="text-xs font-medium text-white/90 leading-relaxed">Bundle with Workhorses or offer limited-time promotions to boost trial rates and overall ticket size.</p>
+                                    <p className="text-[10px] font-medium text-white/90 leading-relaxed">Bundle with Workhorses or offer limited-time promotions to boost trial rates and overall ticket size.</p>
                                 </div>
                             </div>
                         </div>

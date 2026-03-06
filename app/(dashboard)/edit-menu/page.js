@@ -482,9 +482,7 @@ export default function EditMenuPage() {
                                 transition={{ delay: idx * 0.1 }}
                                 className="min-w-[380px] flex-shrink-0 bg-white border border-slate-100 rounded-[32px] p-6 shadow-sm hover:shadow-premium transition-all group snap-start relative overflow-hidden"
                             >
-                                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <ShoppingBag size={80} className="text-slate-900" />
-                                </div>
+
 
                                 <div className="flex justify-between items-start mb-6">
                                     <div className="space-y-1">

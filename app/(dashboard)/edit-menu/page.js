@@ -1,0 +1,341 @@
+"use client";
+
+import DashboardLayout from "@/components/DashboardLayout";
+import { PROCESSED_MENU, CATEGORIES } from "@/lib/data-store";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    Plus,
+    Search,
+    Filter,
+    MoreVertical,
+    Edit3,
+    Trash2,
+    Database,
+    CloudUpload,
+    ChevronRight,
+    LayoutGrid,
+    Utensils,
+    Soup as SoupIcon,
+    Coffee,
+    Waves,
+    IceCream,
+    Check
+} from "lucide-react";
+import { useState } from "react";
+
+const iconMap = {
+    LayoutGrid,
+    Utensils,
+    Soup: SoupIcon,
+    Coffee,
+    Waves,
+    IceCream
+};
+
+const DietBadge = ({ type }) => {
+    let colors = "bg-gray-100 text-gray-600 border-gray-200";
+    if (type === "veg") colors = "bg-emerald-50 text-emerald-600 border-emerald-100";
+    if (type === "non-veg") colors = "bg-rose-50 text-rose-600 border-rose-100";
+    if (type === "jain") colors = "bg-orange-50 text-orange-600 border-orange-100";
+
+    return (
+        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${colors}`}>
+            {type}
+        </span>
+    );
+};
+
+const Toggle = ({ active, onChange }) => (
+    <button
+        onClick={onChange}
+        className={`w-10 h-5 rounded-full transition-all relative ${active ? 'bg-emerald-500' : 'bg-slate-200'}`}
+    >
+        <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${active ? 'left-6' : 'left-1'}`} />
+    </button>
+);
+
+export default function EditMenuPage() {
+    const [items, setItems] = useState(PROCESSED_MENU);
+    const [selectedCategory, setSelectedCategory] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedItem, setSelectedItem] = useState(PROCESSED_MENU[0]);
+    const [categoryStates, setCategoryStates] = useState(
+        CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: true }), {})
+    );
+
+    const filteredItems = items.filter(item => {
+        const matchesSearch = item.foodName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === "all" || item.category.toLowerCase() === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
+
+    // Reset selected item if it's no longer in filtered list, or keep first if available
+    const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || filteredItems[0];
+
+    return (
+        <DashboardLayout>
+            <div className="space-y-8 max-w-[1600px] mx-auto">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg">
+                                <Check size={14} strokeWidth={3} />
+                            </div>
+                            <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Connected to POS</span>
+                        </div>
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight">Chennai - petpooja</h1>
+                    </div>
+                    <div className="flex gap-3">
+                        <button className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 bg-white">
+                            <CloudUpload size={18} /> Sync Menu
+                        </button>
+                        <button className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+                            <Plus size={18} /> Add New Item
+                        </button>
+                    </div>
+                </div>
+
+                {/* Integration Status Bar */}
+                <div className="flex items-center gap-4 p-4 glass rounded-3xl border border-slate-200/50 shadow-sm">
+                    <div className="flex -space-x-2">
+                        {['swiggy', 'zomato', 'talabat', 'website'].map(platform => (
+                            <div key={platform} className="w-10 h-10 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center text-[10px] font-black overflow-hidden relative shadow-sm">
+                                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${platform}`} alt={platform} />
+                                <div className="absolute top-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white" />
+                            </div>
+                        ))}
+                    </div>
+                    <div className="h-8 w-px bg-slate-200 mx-2" />
+                    <div className="flex gap-4">
+                        <button className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider">All Platforms</button>
+                        <button className="px-4 py-2 rounded-xl border border-slate-200 text-slate-500 text-xs font-black uppercase tracking-wider bg-white">Recent</button>
+                        <button className="px-4 py-2 rounded-xl border border-slate-200 text-slate-500 text-xs font-black uppercase tracking-wider bg-white">Home Website</button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-8 items-start">
+                    {/* Left Sidebar: Categories */}
+                    <div className="col-span-12 lg:col-span-3 space-y-4">
+                        <div className="glass rounded-[32px] border border-slate-200/50 p-6 shadow-premium">
+                            <h2 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
+                                <LayoutGrid size={20} /> Categories
+                            </h2>
+                            <div className="space-y-2">
+                                {CATEGORIES.map(cat => {
+                                    const Icon = iconMap[cat.icon] || LayoutGrid;
+                                    const isActive = selectedCategory === cat.id;
+                                    return (
+                                        <div 
+                                            key={cat.id}
+                                            className={`group flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer ${isActive ? 'bg-slate-900 shadow-xl' : 'hover:bg-slate-50'}`}
+                                            onClick={() => setSelectedCategory(cat.id)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`p-2 rounded-xl transition-colors ${isActive ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-white'}`}>
+                                                    <Icon size={20} />
+                                                </div>
+                                                <span className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-600'}`}>{cat.name}</span>
+                                            </div>
+                                            <div onClick={(e) => e.stopPropagation()}>
+                                                <Toggle 
+                                                    active={categoryStates[cat.id]} 
+                                                    onChange={() => setCategoryStates(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))} 
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Quick Stats or Help Card */}
+                        <div className="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl relative overflow-hidden group">
+                           <div className="relative z-10">
+                                <h3 className="font-black text-lg mb-2 italic">Pro Tip!</h3>
+                                <p className="text-indigo-100 text-sm font-medium">Use Bulk Edit to update prices across all categories in seconds.</p>
+                                <button className="mt-4 px-4 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black uppercase hover:scale-105 transition-transform">Get Started</button>
+                           </div>
+                           <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+                                <Database size={120} />
+                           </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content: Items Table */}
+                    <div className="col-span-12 lg:col-span-9 space-y-6">
+                        {/* Search & Bulk Edit */}
+                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+                            <div className="flex-1 relative w-full">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <input 
+                                    type="text"
+                                    placeholder="Search your items by name or ID..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3.5 bg-white rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-medium transition-all shadow-sm"
+                                />
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                                <button className="flex-1 sm:flex-none px-6 py-3.5 bg-white rounded-2xl border border-slate-200 font-bold text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
+                                    <Filter size={18} /> Advanced
+                                </button>
+                                <button className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm">
+                                    <Plus size={18} /> New Item
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Items Table Container */}
+                        <div className="glass rounded-[32px] border border-slate-200/50 shadow-premium overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Name</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Price</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Margin</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Op Cost</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Mark as</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        <AnimatePresence mode="popLayout">
+                                            {filteredItems.map((item) => {
+                                                const isSelected = activeItem?.foodId === item.foodId;
+                                                return (
+                                                    <motion.tr 
+                                                        layout
+                                                        initial={{ opacity: 0 }}
+                                                        animate={{ opacity: 1 }}
+                                                        exit={{ opacity: 0 }}
+                                                        key={item.foodId}
+                                                        className={`group cursor-pointer transition-all ${isSelected ? 'bg-slate-100/50' : 'hover:bg-slate-50/50'}`}
+                                                        onClick={() => setSelectedItem(item)}
+                                                    >
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'border-slate-900' : 'border-slate-200 hover:border-slate-400'}`}>
+                                                                    <div className={`w-2.5 h-2.5 rounded-full transition-all ${isSelected ? 'bg-slate-900' : 'bg-emerald-500 shadow-sm shadow-emerald-200'}`} />
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div>
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <span className="font-bold text-slate-900">{item.foodName}</span>
+                                                                    <DietBadge type={item.dietType} />
+                                                                </div>
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.foodId}</p>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="font-black text-slate-900">${item.price?.toFixed(2)}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="font-bold text-emerald-600">${item.margin?.toFixed(2)}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <span className="font-bold text-slate-500">${item.opCost?.toFixed(2)}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center justify-end gap-3">
+                                                                <button className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${item.popularityScore > 80 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                                                    On
+                                                                </button>
+                                                                <button className="p-2 hover:bg-white hover:shadow-md rounded-xl transition-all opacity-0 group-hover:opacity-100">
+                                                                    <Edit3 size={16} className="text-slate-400 hover:text-slate-900" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                );
+                                            })}
+                                        </AnimatePresence>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Detailed Panels for Selected Item */}
+                        {activeItem && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            >
+                                <div className="glass p-8 rounded-[40px] border border-slate-200/50 shadow-premium">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div>
+                                            <h4 className="font-black text-slate-900 uppercase text-xs tracking-[0.2em] mb-1">Ingredients</h4>
+                                            <p className="text-sm font-medium text-slate-400">Total {activeItem.ingredients?.length} items used</p>
+                                        </div>
+                                        <button className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                                            <Plus size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {activeItem.ingredients?.map((ing, i) => (
+                                            <div key={i} className="flex justify-between items-center bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm group hover:border-slate-200 transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-900 transition-colors">
+                                                        <Database size={18} />
+                                                    </div>
+                                                    <span className="text-sm font-bold text-slate-700">{ing.name}</span>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-sm font-black text-slate-900">{ing.quantity} {ing.unit}</span>
+                                                    <button className="text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {!activeItem.ingredients?.length && <p className="text-center py-8 text-slate-400 font-bold italic">No ingredients added yet.</p>}
+                                    </div>
+                                </div>
+                                <div className="glass p-8 rounded-[40px] border border-slate-200/50 shadow-premium">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div>
+                                            <h4 className="font-black text-slate-900 uppercase text-xs tracking-[0.2em] mb-1">Variants & Addons</h4>
+                                            <p className="text-sm font-medium text-slate-400">Customization options</p>
+                                        </div>
+                                        <button className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg active:scale-95">
+                                            <Plus size={18} />
+                                        </button>
+                                    </div>
+                                    <div className="space-y-6">
+                                        {/* Variants */}
+                                        <div>
+                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Sizes/Variants</h5>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {activeItem.variants?.map((v, i) => (
+                                                    <div key={i} className="flex justify-between items-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                                        <span className="text-sm font-bold text-slate-700">{v.name}</span>
+                                                        <span className="text-sm font-black text-slate-900">${v.price.toFixed(2)}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Addons */}
+                                        <div>
+                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Addons</h5>
+                                            <div className="grid grid-cols-1 gap-2">
+                                                {activeItem.addons?.map((a, i) => (
+                                                    <div key={i} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-500">
+                                                        <span className="text-sm font-bold text-slate-700">{a.name}</span>
+                                                        <span className="text-sm font-black text-slate-900">+${a.price.toFixed(2)}</span>
+                                                    </div>
+                                                ))}
+                                                {!activeItem.addons?.length && <p className="text-xs text-slate-400 font-medium italic">No addons available.</p>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </DashboardLayout>
+    );
+}

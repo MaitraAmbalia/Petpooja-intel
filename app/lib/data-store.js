@@ -247,19 +247,84 @@ export const USERS = [
     { id: "2", name: "Staff Member", email: "staff@petpooja.com", role: "STAFF" },
 ];
 
+// Call Analytics Data
+export const CALL_ANALYTICS = {
+    totalCalls: 458,
+    successfulCalls: 412,
+    humanTransfers: 26,
+    pendingCallbacks: 8,
+    avgCallDuration: "1m 42s"
+};
+
 // Live Voice Order History
 export const VOICE_ORDERS = [
     {
         id: "VO_1001",
         time: "10:30 AM",
         customer: "Rahul Sharma",
+        phoneNumber: "+91 98765 43210",
+        transactionId: "TXN_998271",
+        invoiceNo: "INV-2024-001",
         transcript: "Ek Classic Burger aur do Coke dena please.",
         structuredJson: {
-            items: [{ name: "Classic Burger", qty: 1 }, { name: "Coke", qty: 2 }],
+            items: [{ name: "Classic Burger", qty: 1, price: 12.00 }, { name: "Coke", qty: 2, price: 3.00 }],
             total: 18.00
         },
+        status: "COMPLETED", // CALL status
+        kotStatus: "PENDING", // KOT status
+        aiUpsell: "Suggested Truffle Fries (Accepted)",
+        callType: "AI_SUCCESS"
+    },
+    {
+        id: "VO_1002",
+        time: "10:45 AM",
+        customer: "Priya Singh",
+        phoneNumber: "+91 98234 56789",
+        transactionId: "TXN_998272",
+        invoiceNo: "INV-2024-002",
+        transcript: "Mujhe ek Margherita Pizza chahiye medium size, aur extra cheese add kar dena.",
+        structuredJson: {
+            items: [{ name: "Margherita Pizza", qty: 1, variant: "Medium", price: 15.00, addons: ["Extra Cheese"] }],
+            total: 17.00
+        },
         status: "COMPLETED",
-        aiUpsell: "Suggested Truffle Fries (Accepted)"
+        kotStatus: "PREPARING",
+        aiUpsell: "Suggested Garlic Bread (Rejected)",
+        callType: "AI_SUCCESS"
+    },
+    {
+        id: "VO_1003",
+        time: "11:05 AM",
+        customer: "Amit Verma",
+        phoneNumber: "+91 91234 56789",
+        transactionId: "TXN_998273",
+        invoiceNo: "INV-2024-003",
+        transcript: "Hello, I want to order... wait, is this a robot?",
+        structuredJson: {
+            items: [],
+            total: 0
+        },
+        status: "TRANSFERRED",
+        kotStatus: "NONE",
+        aiUpsell: "None",
+        callType: "HUMAN_TRANSFER"
+    },
+    {
+        id: "VO_1004",
+        time: "11:15 AM",
+        customer: "Suresh Mehra",
+        phoneNumber: "+91 99887 76655",
+        transactionId: "TXN_998274",
+        invoiceNo: "INV-2024-004",
+        transcript: "Call disconnect ho gaya tha, please call back karein.",
+        structuredJson: {
+            items: [],
+            total: 0
+        },
+        status: "PENDING_CALLBACK",
+        kotStatus: "NONE",
+        aiUpsell: "None",
+        callType: "CALLBACK"
     }
 ];
 // Mock Team Members

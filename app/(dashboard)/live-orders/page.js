@@ -1,7 +1,6 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
-import { VOICE_ORDERS } from "@/lib/data-store";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     PhoneIncoming,
@@ -13,44 +12,92 @@ import {
     Headphones,
     FileJson,
     Activity,
-    User
+    User,
+    Hash,
+    Receipt,
+    Phone,
+    CornerUpRight,
+    Search
 } from "lucide-react";
+import { VOICE_ORDERS, CALL_ANALYTICS } from "@/lib/data-store";
 import { useState } from "react";
 
-const OrderCard = ({ order, isActive, onClick }) => (
-    <motion.div
-        onClick={onClick}
-        whileHover={{ x: 4 }}
-        className={`p-6 rounded-3xl border transition-all cursor-pointer group ${isActive
+const CallAnalyticsStats = () => (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[
+            { label: "Total Calls", value: CALL_ANALYTICS.totalCalls, icon: PhoneIncoming, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "Successful", value: CALL_ANALYTICS.successfulCalls, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "Human Transfers", value: CALL_ANALYTICS.humanTransfers, icon: Headphones, color: "text-orange-600", bg: "bg-orange-50" },
+            { label: "Pending Callbacks", value: CALL_ANALYTICS.pendingCallbacks, icon: Clock, color: "text-rose-600", bg: "bg-rose-50" },
+        ].map((stat, i) => (
+            <div key={i} className="glass p-5 rounded-[24px] border border-slate-200/50 shadow-sm flex items-center gap-4">
+                <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
+                    <stat.icon size={20} />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                    <h3 className="text-xl font-black text-slate-900">{stat.value}</h3>
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
+const OrderCard = ({ order, isActive, onClick }) => {
+    const getKOTStyle = (status) => {
+        switch (status) {
+            case 'PENDING': return 'bg-amber-100 text-amber-600 border-amber-200';
+            case 'PREPARING': return 'bg-blue-100 text-blue-600 border-blue-200';
+            case 'READY': return 'bg-emerald-100 text-emerald-600 border-emerald-200';
+            default: return 'bg-slate-100 text-slate-400 border-slate-200';
+        }
+    };
+
+    return (
+        <motion.div
+            onClick={onClick}
+            whileHover={{ x: 4 }}
+            className={`p-6 rounded-3xl border transition-all cursor-pointer group ${isActive
                 ? "bg-slate-900 border-slate-900 shadow-xl shadow-slate-200"
                 : "glass border-slate-200/50 hover:border-slate-300"
-            }`}
-    >
-        <div className="flex justify-between items-start mb-4">
-            <div className={`p-2.5 rounded-xl ${isActive ? "bg-white/10" : "bg-orange-50"}`}>
-                <PhoneIncoming className={isActive ? "text-white" : "text-orange-500"} size={18} />
+                }`}
+        >
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-2.5 rounded-xl ${isActive ? "bg-white/10" : "bg-orange-50"}`}>
+                    {order.status === 'PENDING_CALLBACK' ?
+                        <CornerUpRight className={isActive ? "text-white" : "text-rose-500"} size={18} /> :
+                        <PhoneIncoming className={isActive ? "text-white" : "text-orange-500"} size={18} />
+                    }
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-slate-400" : "text-slate-400"}`}>
+                        {order.time}
+                    </span>
+                    {order.kotStatus !== 'NONE' && (
+                        <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase border ${getKOTStyle(order.kotStatus)}`}>
+                            KOT: {order.kotStatus}
+                        </span>
+                    )}
+                </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-slate-400" : "text-slate-400"}`}>
-                {order.time}
-            </span>
-        </div>
 
-        <h4 className={`font-bold ${isActive ? "text-white" : "text-slate-900"}`}>{order.customer}</h4>
-        <p className={`text-xs mt-1 font-medium ${isActive ? "text-slate-400" : "text-slate-500"}`}>
-            {order.status === 'COMPLETED' ? 'Order Processed' : 'AI Handling...'}
-        </p>
+            <h4 className={`font-bold ${isActive ? "text-white" : "text-slate-900"}`}>{order.customer}</h4>
+            <p className={`text-xs mt-1 font-medium ${isActive ? "text-slate-400" : "text-slate-500"}`}>
+                {order.status === 'COMPLETED' ? 'Order Processed' : order.status === 'TRANSFERRED' ? 'Human Handling' : 'Pending Callback'}
+            </p>
 
-        <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Activity size={14} className={isActive ? "text-emerald-400" : "text-emerald-500"} />
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-emerald-400" : "text-emerald-600"}`}>
-                    AI Success
-                </span>
+            <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <Activity size={14} className={isActive ? "text-emerald-400" : "text-emerald-500"} />
+                    <span className={`text-[10px] font-bold uppercase tracking-widest ${isActive ? "text-emerald-400" : "text-emerald-600"}`}>
+                        {order.callType.replace('_', ' ')}
+                    </span>
+                </div>
+                <ChevronRight size={16} className={isActive ? "text-white/30" : "text-slate-300 group-hover:translate-x-1 transition-transform"} />
             </div>
-            <ChevronRight size={16} className={isActive ? "text-white/30" : "text-slate-300 group-hover:translate-x-1 transition-transform"} />
-        </div>
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 export default function LiveOrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState(VOICE_ORDERS[0]);
@@ -58,10 +105,19 @@ export default function LiveOrdersPage() {
     return (
         <DashboardLayout>
             <div className="h-[calc(100vh-140px)] flex flex-col gap-8">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Live Orders</h1>
-                    <p className="text-slate-500 font-medium">Real-time AI voice order monitoring</p>
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Live Orders & Voice Analytics</h1>
+                        <p className="text-slate-500 font-medium">Monitoring real-time AI and Human call performance</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2">
+                            <Search size={18} /> Search Transcripts
+                        </button>
+                    </div>
                 </div>
+
+                <CallAnalyticsStats />
 
                 <div className="flex-1 flex gap-8 overflow-hidden">
                     {/* Order List */}
@@ -96,24 +152,51 @@ export default function LiveOrdersPage() {
                                 >
                                     {/* Pane Header */}
                                     <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-white/50">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white">
-                                                <User size={24} />
+                                        <div className="flex items-center gap-6">
+                                            <div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg">
+                                                <User size={28} />
                                             </div>
-                                            <div>
-                                                <h3 className="text-xl font-bold text-slate-900">{selectedOrder.customer}</h3>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                                    <Clock size={12} /> Call Duration: 1m 12s
-                                                </p>
+                                            <div className="space-y-1">
+                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{selectedOrder.customer}</h3>
+                                                <div className="flex items-center gap-4">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                        <Phone size={12} className="text-orange-500" /> {selectedOrder.phoneNumber}
+                                                    </p>
+                                                    <div className="w-1 h-1 rounded-full bg-slate-200" />
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                        <Clock size={12} className="text-blue-500" /> Duration: 1m 12s
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex gap-3">
-                                            <button className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2">
-                                                <Headphones size={18} /> Human Transfer
+                                            <button className="px-5 py-3 rounded-2xl border border-slate-200 font-black text-xs text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 uppercase tracking-wider">
+                                                <Headphones size={18} /> Transfer to Human
                                             </button>
-                                            <button className="px-5 py-2.5 rounded-xl bg-orange-500 text-white font-bold text-sm shadow-lg shadow-orange-100 hover:bg-orange-600 transition-all">
-                                                Resolve
+                                            <button className="px-5 py-3 rounded-2xl bg-rose-500 text-white font-black text-xs shadow-lg shadow-rose-100 hover:bg-rose-600 transition-all uppercase tracking-wider">
+                                                Close Call
                                             </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Order Meta Info Bar */}
+                                    <div className="px-8 py-3 bg-slate-50 border-b border-slate-100 flex gap-8">
+                                        <div className="flex items-center gap-2">
+                                            <Hash size={12} className="text-slate-400" />
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Txn ID:</span>
+                                            <span className="text-[10px] font-bold text-slate-900">{selectedOrder.transactionId}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Receipt size={12} className="text-slate-400" />
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Invoice:</span>
+                                            <span className="text-[10px] font-bold text-slate-900">{selectedOrder.invoiceNo}</span>
+                                        </div>
+                                        <div className="ml-auto flex items-center gap-2">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">AI Confidence:</span>
+                                            <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                                <div className="h-full bg-emerald-500 w-[94%]" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">94%</span>
                                         </div>
                                     </div>
 

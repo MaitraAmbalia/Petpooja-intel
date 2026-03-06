@@ -132,38 +132,33 @@ export const getPriceOptimization = (item) => {
  *    - Combo 3 (Hidden Gems): Under-promoted high scorers (Snack + Bev) - 10% Discount
  */
 export const getStrategicCombos = (items) => {
-    // 1. Calculate WMA for all items
+    // 1. Calculate WMA and score items by category
     const processedItems = items.map(item => {
         const history = item.orderHistory || [0, 0, 0];
         const wma = (history[0] * 0.5) + (history[1] * 0.3) + (history[2] * 0.2);
         return { ...item, wma };
     });
 
-    // 2. Separate by Categories
     const snacks = processedItems.filter(i => i.category === "Snack");
     const beverages = processedItems.filter(i => i.category === "Beverage");
     const desserts = processedItems.filter(i => i.category === "Dessert");
 
-    // 3. Normalization Helper (Min-Max)
     const normalize = (arr, key) => {
+        if (arr.length === 0) return [];
         const values = arr.map(i => i[key]);
         const min = Math.min(...values);
         const max = Math.max(...values);
         if (max === min) return arr.map(i => ({ ...i, [`${key}_norm`]: 1 }));
-        return arr.map(i => ({
-            ...i,
-            [`${key}_norm`]: (i[key] - min) / (max - min)
-        }));
+        return arr.map(i => ({ ...i, [`${key}_norm`]: (i[key] - min) / (max - min) }));
     };
 
-    // Normalize each category separately to ensure fair ranking
     const scoreItems = (pool) => {
         if (pool.length === 0) return [];
         let p = normalize(pool, 'margin');
         p = normalize(p, 'wma');
         return p.map(i => ({
             ...i,
-            score: i.margin_norm + i.wma_norm
+            score: (i.margin_norm || 0) + (i.wma_norm || 0)
         })).sort((a, b) => b.score - a.score);
     };
 
@@ -171,54 +166,50 @@ export const getStrategicCombos = (items) => {
     const scoredBeverages = scoreItems(beverages);
     const scoredDesserts = scoreItems(desserts);
 
-    // 4. Bundling Logic
-    const configs = [
-        {
-            id: 'combo_1',
-            name: "Combo 1 (Star Performers)",
-            strategy: "High Pop + High Margin (WMA)",
-            discount: 0.05,
-            get: () => [scoredSnacks[0], scoredBeverages[0], scoredDesserts[0]]
-        },
-        {
-            id: 'combo_2',
-            name: "Combo 2 (Traffic Builders)",
-            strategy: "High Volume Staples",
-            discount: 0.08,
-            get: () => [scoredSnacks[1], scoredBeverages[1]]
-        },
-        {
-            id: 'combo_3',
-            name: "Combo 3 (Hidden Gems)",
-            strategy: "High Margin Potential",
-            discount: 0.10,
-            get: () => {
-                // Pick items with high margin but lower popularity (lower score index)
-                const s = scoredSnacks.find(i => i.wma_norm < 0.5) || scoredSnacks[scoredSnacks.length - 1];
-                const b = scoredBeverages.find(i => i.wma_norm < 0.5) || scoredBeverages[scoredBeverages.length - 1];
-                return [s, b];
-            }
-        }
-    ];
-
-    return configs.map(config => {
-        const comboItems = config.get().filter(Boolean);
+    const createCombo = (items, discount, nameSuffix, strategy) => {
+        const comboItems = items.filter(Boolean);
         if (comboItems.length < 2) return null;
 
         const basePrice = comboItems.reduce((acc, i) => acc + i.price, 0);
         const baseMargin = comboItems.reduce((acc, i) => acc + i.margin, 0);
-        const discountAmount = basePrice * config.discount;
+        const discountAmount = basePrice * discount;
 
         return {
-            id: config.id,
-            name: config.name,
+            id: `combo_${Math.random().toString(36).substr(2, 9)}`,
+            name: `${nameSuffix} Bundle`,
             items: comboItems,
-            strategy: config.strategy,
-            discount: config.discount * 100,
+            strategy: strategy,
+            discount: Number((discount * 100).toFixed(0)),
             basePrice: Number(basePrice.toFixed(2)),
             discountedPrice: Number((basePrice - discountAmount).toFixed(2)),
-            originalMargin: Number(baseMargin.toFixed(2)),
             newMargin: Number((baseMargin - discountAmount).toFixed(2)),
         };
-    }).filter(Boolean);
+    };
+
+    // Engine 1: Trio (Snack + Bev + Dessert) - 3 Combos
+    const trioEngine = [
+        createCombo([scoredSnacks[0], scoredBeverages[0], scoredDesserts[0]], 0.10, "Supreme Trio I", "High-Performance Stars"),
+        createCombo([scoredSnacks[1], scoredBeverages[1], scoredDesserts[1]], 0.12, "Supreme Trio II", "Balanced Profit Trio"),
+        createCombo([scoredSnacks[2], scoredBeverages[2], scoredDesserts[2]], 0.15, "Supreme Trio III", "High-Margin Potential")
+    ].filter(Boolean);
+
+    // Engine 2: Snack + Beverage - 3 Combos
+    const snackBevEngine = [
+        createCombo([scoredSnacks[0], scoredBeverages[1]], 0.05, "Quick Bite I", "Popularity Driver"),
+        createCombo([scoredSnacks[1], scoredBeverages[0]], 0.08, "Quick Bite II", "Margin Optimizer"),
+        createCombo([scoredSnacks[2], scoredBeverages[2]], 0.10, "Quick Bite III", "Refreshment Pair")
+    ].filter(Boolean);
+
+    // Engine 3: Snack + Dessert - 3 Combos
+    const snackDessertEngine = [
+        createCombo([scoredSnacks[0], scoredDesserts[1]], 0.07, "Sweet Treat I", "Afternoon Delights"),
+        createCombo([scoredSnacks[1], scoredDesserts[0]], 0.09, "Sweet Treat II", "Dessert Pairing"),
+        createCombo([scoredSnacks[2], scoredDesserts[2]], 0.11, "Sweet Treat III", "Value Comfort")
+    ].filter(Boolean);
+
+    return {
+        trio: trioEngine,
+        snackBev: snackBevEngine,
+        snackDessert: snackDessertEngine
+    };
 };

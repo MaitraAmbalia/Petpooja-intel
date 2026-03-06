@@ -1,7 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
-import { PROCESSED_MENU } from "@/lib/data-store";
+import { PROCESSED_MENU, STRATEGIC_COMBOS } from "@/lib/data-store";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
     ScatterChart,
@@ -15,7 +16,9 @@ import {
     Cell,
     ReferenceArea
 } from "recharts";
-import { TrendingUp, AlertCircle, Info, ChevronRight, Zap } from "lucide-react";
+import { TrendingUp, AlertCircle, Info, ChevronRight, Zap, ChevronDown, ShoppingBag, Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AnimatePresence } from "framer-motion";
 
 const MatrixLabel = ({ x, y, label, color }) => (
     <div className={`absolute ${x} ${y} flex items-center gap-2 px-3 py-1.5 rounded-xl border ${color} bg-white shadow-sm z-10`}>
@@ -23,7 +26,66 @@ const MatrixLabel = ({ x, y, label, color }) => (
     </div>
 );
 
+const ComboPanel = ({ title, icon: Icon, combos, isOpen, onToggle, colorClass }) => (
+    <div className="glass rounded-[32px] border border-slate-200/50 shadow-sm overflow-hidden transition-all duration-300">
+        <button
+            onClick={onToggle}
+            className={`w-full p-6 flex items-center justify-between hover:bg-slate-50 transition-colors ${isOpen ? 'bg-slate-50/50' : ''}`}
+        >
+            <div className="flex items-center gap-4">
+                <div className={`p-3 rounded-2xl ${colorClass}`}>
+                    <Icon size={20} />
+                </div>
+                <div className="text-left">
+                    <h4 className="font-black text-slate-900 tracking-tight">{title}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{combos.length} AI Recommendations</p>
+                </div>
+            </div>
+            <motion.div animate={{ rotate: isOpen ? 180 : 0 }}>
+                <ChevronDown size={20} className="text-slate-400" />
+            </motion.div>
+        </button>
+
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden bg-white/50"
+                >
+                    <div className="p-6 pt-0 space-y-4">
+                        {combos.map((combo, idx) => (
+                            <div key={idx} className="p-5 rounded-[24px] border border-slate-100 bg-white shadow-sm hover:shadow-md transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h5 className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{combo.name}</h5>
+                                    <Badge className="bg-emerald-50 text-emerald-600 border-none">-{combo.discount}%</Badge>
+                                </div>
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    {combo.items.map((item, i) => (
+                                        <Badge key={i} variant="outline" className="border-slate-100 text-slate-500 font-bold bg-slate-50">
+                                            {item.foodName}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                <div className="flex justify-between items-center text-xs">
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="font-black text-slate-900 text-sm">${combo.discountedPrice}</span>
+                                        <span className="text-slate-400 line-through">${combo.basePrice}</span>
+                                    </div>
+                                    <span className="text-emerald-600 font-bold uppercase tracking-tighter">Profit +${combo.newMargin}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    </div>
+);
+
 export default function MenuAnalyticsPage() {
+    const [openPanel, setOpenPanel] = useState('trio');
     const avgMargin = PROCESSED_MENU.reduce((acc, i) => acc + i.margin, 0) / PROCESSED_MENU.length;
     const avgPop = 50;
 
@@ -137,6 +199,46 @@ export default function MenuAnalyticsPage() {
                     </div>
                 </div>
 
+                {/* Bundle Intelligence Area */}
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 px-2">
+                        <div className="bg-orange-500 p-2 rounded-xl shadow-lg shadow-orange-100">
+                            <Zap className="text-white w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">AI STRATEGIC BUNDLES</h2>
+                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em]">Cross-Category Optimization Engines</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <ComboPanel
+                            title="Supreme Trio Engine"
+                            icon={Star}
+                            combos={STRATEGIC_COMBOS.trio}
+                            isOpen={openPanel === 'trio'}
+                            onToggle={() => setOpenPanel(openPanel === 'trio' ? null : 'trio')}
+                            colorClass="bg-indigo-50 text-indigo-600"
+                        />
+                        <ComboPanel
+                            title="Quick Bite Engine"
+                            icon={ShoppingBag}
+                            combos={STRATEGIC_COMBOS.snackBev}
+                            isOpen={openPanel === 'snackBev'}
+                            onToggle={() => setOpenPanel(openPanel === 'snackBev' ? null : 'snackBev')}
+                            colorClass="bg-emerald-50 text-emerald-600"
+                        />
+                        <ComboPanel
+                            title="Sweet Pairing Engine"
+                            icon={Zap}
+                            combos={STRATEGIC_COMBOS.snackDessert}
+                            isOpen={openPanel === 'snackDessert'}
+                            onToggle={() => setOpenPanel(openPanel === 'snackDessert' ? null : 'snackDessert')}
+                            colorClass="bg-orange-50 text-orange-600"
+                        />
+                    </div>
+                </div>
+
                 {/* Detailed Table */}
                 <div className="glass rounded-[32px] border border-slate-200/50 shadow-premium overflow-hidden">
                     <div className="p-8 border-b border-slate-100 flex justify-between items-center">
@@ -157,7 +259,7 @@ export default function MenuAnalyticsPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
-                                {PROCESSED_MENU.sort((a, b) => b.margin - a.margin).map((item, i) => (
+                                {([...PROCESSED_MENU].sort((a, b) => b.margin - a.margin)).map((item, i) => (
                                     <motion.tr
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}

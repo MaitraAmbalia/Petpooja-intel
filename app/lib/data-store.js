@@ -123,6 +123,38 @@ export const INITIAL_MENU = [
         ingredients: [{ name: "Vanilla Ice Cream", quantity: "100", unit: "g" }],
         variants: [{ name: "Standard", price: 5.00 }],
         addons: []
+    },
+    {
+        foodId: "sku_114",
+        foodName: "Fruit Punch",
+        price: 5.50,
+        foodCost: 1.00,
+        margin: 4.50,
+        opCost: 0.50,
+        category: "Beverage",
+        isVeg: true,
+        dietType: "veg",
+        orderHistory: [40, 38, 42],
+        spiceLevel: 0,
+        ingredients: [{ name: "Mixed Fruits", quantity: "1", unit: "pcs" }],
+        variants: [{ name: "Standard", price: 5.50 }],
+        addons: []
+    },
+    {
+        foodId: "sku_115",
+        foodName: "Red Velvet Jar",
+        price: 8.00,
+        foodCost: 2.50,
+        margin: 5.50,
+        opCost: 0.60,
+        category: "Dessert",
+        isVeg: true,
+        dietType: "veg",
+        orderHistory: [30, 35, 32],
+        spiceLevel: 0,
+        ingredients: [{ name: "Cream Cheese", quantity: "30", unit: "g" }],
+        variants: [{ name: "Standard", price: 8.00 }],
+        addons: []
     }
 ];
 

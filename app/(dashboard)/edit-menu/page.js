@@ -474,7 +474,7 @@ export default function EditMenuPage() {
                     </div>
 
                     <div className="flex gap-6 overflow-x-auto pb-4 px-2 custom-scrollbar snap-x">
-                        {STRATEGIC_COMBOS.map((combo, idx) => (
+                        {Object.values(STRATEGIC_COMBOS).flat().map((combo, idx) => (
                             <motion.div
                                 key={combo.id}
                                 initial={{ opacity: 0, x: 20 }}

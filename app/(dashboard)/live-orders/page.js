@@ -251,7 +251,7 @@ export default function LiveOrdersPage() {
                                             <div className="mt-8 space-y-4">
                                                 <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Final Bill</p>
-                                                    <h5 className="text-xl font-black text-slate-900">${selectedOrder.structuredJson.total.toFixed(2)}</h5>
+                                                    <h5 className="text-xl font-black text-slate-900">₹{selectedOrder.structuredJson.total.toFixed(2)}</h5>
                                                 </div>
                                                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
                                                     <CheckCircle2 size={20} className="text-emerald-500" />

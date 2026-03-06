@@ -24,6 +24,16 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Email and password are required");
                 }
 
+                // Hardcoded bypass for demo/development
+                if (credentials.email.toLowerCase() === "admin@petpooja.com" && credentials.password === "admin123") {
+                    return {
+                        id: "1",
+                        name: "Admin User",
+                        email: "admin@petpooja.com",
+                        role: "ADMIN",
+                    };
+                }
+
                 await connectDB();
 
                 const user = await User.findOne({ email: credentials.email.toLowerCase() });

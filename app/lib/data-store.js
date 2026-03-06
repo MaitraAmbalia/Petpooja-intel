@@ -573,7 +573,7 @@ export const LIVE_STATS = {
     totalCalls: 185,
     aiSuccessRate: 94.5,
     activeTables: 12,
-    totalRevenue: "$5,240.00"
+    totalRevenue: "₹5,240.00"
 };
 
 // Mock Auth Users

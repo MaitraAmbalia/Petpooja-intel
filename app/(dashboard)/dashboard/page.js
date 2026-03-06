@@ -202,6 +202,7 @@ export default function DashboardPage() {
                                         />
                                         <YAxis hide />
                                         <Tooltip
+                                            formatter={(value) => [`$${Number(value).toFixed(2)}`, ""]}
                                             contentStyle={{
                                                 borderRadius: '16px',
                                                 border: '1px solid #f1f5f9',

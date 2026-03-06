@@ -115,18 +115,72 @@ export const getPriceOptimization = (item) => {
 };
 
 /**
- * Real-time upselling logic based on margin/popularity
- * To be called by the Voice Copilot during order capture.
+ * Strategic Combo Generation Logic
  * 
- * @param {Object} currentOrder - The items currently in the voice order
- * @param {Array} menuItems - The full menu with metadata (expected to be classified)
- * @returns {Object|null} An item or combo to suggest
+ * Implements the High/Low quadrant strategy:
+ * - Combo 1: High Pop + High Margin (Star) - 5% discount
+ * - Combo 2: High Pop + Low Margin (Workhorse) - 8% discount
+ * - Combo 3: Low Pop + High Margin (Challenge) - 10% discount
  */
-export const getSmartUpsell = (currentOrder, menuItems) => {
-    // Priority: Challenges (High Margin, need promotion) > Stars (Safe bets)
-    const candidates = menuItems
-        .filter(item => item.classification === "Challenge" || item.classification === "Star")
-        .sort((a, b) => b.margin - a.margin);
+export const getStrategicCombos = (items) => {
+    // Separate by relevant categories for bundling
+    const snacks = items.filter(i => i.category === "Mains" || i.category === "Sides");
+    const beverages = items.filter(i => i.category === "Beverage");
+    const desserts = items.filter(i => i.category === "Desserts");
 
-    return candidates[0] || null;
+    const getMedian = (arr, key) => {
+        const values = arr.map(i => i[key]).sort((a, b) => a - b);
+        const mid = Math.floor(values.length / 2);
+        return values.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+    };
+
+    const findItem = (pool, popType, marType) => {
+        if (pool.length === 0) return null;
+
+        const medPop = getMedian(pool, 'popularityScore');
+        const medMar = getMedian(pool, 'margin');
+
+        const popCond = (i) => popType === 'High' ? i.popularityScore >= medPop : i.popularityScore < medPop;
+        const marCond = (i) => marType === 'High' ? i.margin >= medMar : i.margin < medMar;
+
+        let candidates = pool.filter(i => popCond(i) && marCond(i));
+        if (candidates.length === 0) candidates = pool;
+
+        // Sort to pick best representative
+        return [...candidates].sort((a, b) => {
+            if (popType === 'High' && marType === 'High') return b.popularityScore - a.popularityScore || b.margin - a.margin;
+            if (popType === 'High' && marType === 'Low') return b.popularityScore - a.popularityScore || a.margin - b.margin;
+            if (popType === 'Low' && marType === 'High') return b.margin - a.margin || a.popularityScore - b.popularityScore;
+            return b.margin - a.margin;
+        })[0];
+    };
+
+    const configs = [
+        { name: "Combo 1", strategy: "Star Performers", desc: "High Pop + High Margin", discount: 0.05, types: ['snack', 'beverage'], sType: 'High', mType: 'High' },
+        { name: "Combo 2", strategy: "Traffic Builders", desc: "High Pop + Low Margin", discount: 0.08, types: ['snack', 'beverage'], sType: 'High', mType: 'Low' },
+        { name: "Combo 3", strategy: "Hidden Gems", desc: "Low Pop + High Margin", discount: 0.10, types: ['snack', 'beverage'], sType: 'Low', mType: 'High' }
+    ];
+
+    return configs.map(config => {
+        const snack = findItem(snacks, config.sType, config.mType);
+        const beverage = findItem(beverages, config.sType, config.mType);
+
+        if (!snack || !beverage) return null;
+
+        const basePrice = snack.price + beverage.price;
+        const baseMargin = snack.margin + beverage.margin;
+        const discountAmount = basePrice * config.discount;
+
+        return {
+            id: `bundle_${config.name.toLowerCase().replace(' ', '_')}`,
+            name: `${config.name} (${config.strategy})`,
+            items: [snack, beverage],
+            strategy: config.desc,
+            discount: config.discount * 100,
+            basePrice: basePrice,
+            discountedPrice: Number((basePrice - discountAmount).toFixed(2)),
+            originalMargin: baseMargin,
+            newMargin: Number((baseMargin - discountAmount).toFixed(2)),
+        };
+    }).filter(Boolean);
 };

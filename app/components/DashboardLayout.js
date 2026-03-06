@@ -18,7 +18,11 @@ import {
     Plus,
     Mic2,
     Library,
-    UserCircle
+    UserCircle,
+    Sun,
+    Moon,
+    Store,
+    Circle
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -27,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { MOCK_RESTAURANT } from "@/lib/data-store";
 
 const sidebarGroups = [
     {
@@ -48,6 +53,13 @@ export default function DashboardLayout({ children }) {
     const router = useRouter();
     const pathname = usePathname();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+    const [notifications, setNotifications] = useState([
+        { id: 1, title: "Call Accepted", desc: "AI successfully handled call from Rahul", type: "success", time: "2m ago" },
+        { id: 2, title: "Transfer Requested", desc: "Customer Priya requested human agent", type: "warning", time: "5m ago" },
+        { id: 3, title: "Call Rejected", desc: "Spam call detected and blocked", type: "error", time: "12m ago" },
+    ]);
 
     useEffect(() => {
         if (status === "unauthenticated") {
@@ -76,7 +88,7 @@ export default function DashboardLayout({ children }) {
                 initial={false}
                 animate={{ width: isSidebarOpen ? 240 : 0 }}
                 className={cn(
-                    "flex flex-col border-r border-[#e2e8f0] bg-white z-30 transition-all",
+                    "flex flex-col border-r border-[#e2e8f0] bg-white z-30 transition-all overflow-hidden",
                     !isSidebarOpen && "border-none"
                 )}
             >
@@ -122,45 +134,112 @@ export default function DashboardLayout({ children }) {
             </motion.aside>
 
             {/* Content Area */}
-            <div className="flex-1 flex flex-col min-w-0">
-                <header className="h-16 border-b border-[#e2e8f0] flex items-center justify-between px-8 bg-white relative z-20">
+            <div className={cn("flex-1 flex flex-col min-w-0 transition-colors duration-300", isDarkMode ? "bg-slate-950" : "bg-[#f8fafc]")}>
+                <header className={cn(
+                    "h-16 border-b flex items-center justify-between px-8 relative z-20 transition-all duration-300",
+                    isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-[#e2e8f0]"
+                )}>
                     <div className="flex items-center gap-6 flex-1">
-                        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-400">
-                            <div className="bg-slate-100 p-1.5 rounded-full">
+                        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={isDarkMode ? "text-slate-500" : "text-slate-400"}>
+                            <div className={cn("p-1.5 rounded-full", isDarkMode ? "bg-slate-800" : "bg-slate-100")}>
                                 <Plus size={16} className={cn("transition-transform", isSidebarOpen ? "rotate-45" : "rotate-0")} />
                             </div>
                         </Button>
-                        <div className="relative max-w-md w-full hidden md:block">
-                            <Plus className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                className="w-full bg-[#f8fafc] border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-1 focus:ring-orange-500 outline-none"
-                            />
+
+                        <div className="flex items-center gap-2">
+                            <div className="bg-orange-500 p-1.5 rounded-lg shadow-lg shadow-orange-100">
+                                <Store className="text-white w-4 h-4" />
+                            </div>
+                            <span className={cn("font-black tracking-tight text-lg", isDarkMode ? "text-white" : "text-slate-900")}>
+                                {MOCK_RESTAURANT.name}
+                            </span>
                         </div>
+
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" className="text-slate-400 rounded-full bg-slate-50">
-                            <Bell size={20} />
+                    <div className="flex items-center gap-2">
+                        {/* Dark Mode Toggle */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsDarkMode(!isDarkMode)}
+                            className={cn("rounded-2xl transition-all", isDarkMode ? "bg-slate-800 text-yellow-400" : "bg-slate-50 text-slate-400")}
+                        >
+                            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-slate-400 rounded-full bg-slate-50">
-                            <Plus size={20} />
-                        </Button>
-                        <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
+
+                        {/* Notifications */}
+                        <div className="relative">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                                className={cn("rounded-2xl relative", isDarkMode ? "bg-slate-800 text-slate-400" : "bg-slate-50 text-slate-400")}
+                            >
+                                <Bell size={18} />
+                                <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full border-2 border-white" />
+                            </Button>
+
+                            <AnimatePresence>
+                                {isNotificationsOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                        className={cn(
+                                            "absolute right-0 top-full mt-2 w-80 rounded-[24px] border shadow-premium overflow-hidden",
+                                            isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-100"
+                                        )}
+                                    >
+                                        <div className={cn("p-4 border-b flex justify-between items-center", isDarkMode ? "border-slate-800" : "border-slate-50")}>
+                                            <span className={cn("text-xs font-black uppercase tracking-widest", isDarkMode ? "text-slate-400" : "text-slate-900")}>Notifications</span>
+                                            <Badge variant="outline" className="text-[9px] font-black">{notifications.length} New</Badge>
+                                        </div>
+                                        <div className="p-2 space-y-1">
+                                            {notifications.map(n => (
+                                                <div key={n.id} className={cn("p-3 rounded-2xl transition-colors cursor-pointer group", isDarkMode ? "hover:bg-slate-800" : "hover:bg-slate-50")}>
+                                                    <div className="flex justify-between mb-1">
+                                                        <span className={cn(
+                                                            "text-[10px] font-black uppercase tracking-wider",
+                                                            n.type === 'success' ? 'text-emerald-600' : n.type === 'warning' ? 'text-orange-500' : 'text-rose-500'
+                                                        )}>{n.title}</span>
+                                                        <span className="text-[9px] font-bold text-slate-500">{n.time}</span>
+                                                    </div>
+                                                    <p className={cn("text-xs font-medium", isDarkMode ? "text-slate-400 group-hover:text-slate-300" : "text-slate-600 group-hover:text-slate-900")}>{n.desc}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className={cn("p-3 border-t text-center", isDarkMode ? "border-slate-800" : "border-slate-50")}>
+                                            <button className="text-[10px] font-black text-orange-500 uppercase tracking-widest hover:text-orange-600">View All Pipeline</button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="h-8 w-px bg-slate-100 mx-2 hidden sm:block" />
+
+                        {/* Premium User Profile Section */}
+                        <div className={cn(
+                            "flex items-center gap-3 p-1 pl-3 pr-2 rounded-2xl transition-all border",
+                            isDarkMode ? "bg-slate-800/50 border-slate-700" : "bg-slate-50/50 border-slate-100"
+                        )}>
                             <div className="text-right hidden sm:block">
-                                <p className="text-sm font-bold text-slate-900 leading-none">{session.user.name}</p>
-                                <p className="text-[10px] text-slate-400 mt-1">Manager</p>
+                                <p className={cn("text-xs font-black tracking-tight", isDarkMode ? "text-white" : "text-slate-900")}>{session.user.name}</p>
+                                <div className="flex items-center justify-end gap-1.5">
+                                    <Circle size={4} className="fill-orange-500 text-orange-500" />
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Administrator</p>
+                                </div>
                             </div>
-                            <Avatar className="w-9 h-9 border border-slate-100">
+                            <Avatar className="w-10 h-10 border-2 border-white shadow-sm">
                                 <AvatarImage src={session.user.image} />
-                                <AvatarFallback className="bg-orange-500 text-white text-[10px] font-bold">{session.user.name?.[0]}</AvatarFallback>
+                                <AvatarFallback className="bg-orange-500 text-white text-xs font-black">{session.user.name?.[0]}</AvatarFallback>
                             </Avatar>
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto custom-scrollbar">
+                <main className={cn("flex-1 overflow-y-auto custom-scrollbar transition-colors duration-300", isDarkMode ? "bg-slate-950 text-white" : "bg-[#f8fafc] text-[#0f172a]")}>
                     <div className="p-8">
                         <AnimatePresence mode="wait">
                             <motion.div

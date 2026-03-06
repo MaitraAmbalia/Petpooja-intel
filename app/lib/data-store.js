@@ -4,8 +4,7 @@
  * This file replaces hardcoded mock data in components.
  * It strictly adheres to the schemas defined in schemas.js.
  */
-
-import { calculateMargin, classifyMenuItems } from "./revenue-engine";
+import { calculateMargin, classifyMenuItems, getStrategicCombos } from "./revenue-engine";
 
 // Initial Menu Data
 export const INITIAL_MENU = [
@@ -217,18 +216,26 @@ const avgMargin = INITIAL_MENU.reduce((acc, i) => acc + (i.price - i.foodCost), 
 const avgPopularity = 50; // Median popularity
 
 export const PROCESSED_MENU = classifyMenuItems(INITIAL_MENU, avgMargin, avgPopularity);
+export const STRATEGIC_COMBOS = getStrategicCombos(PROCESSED_MENU);
 
 // 15-Day Revenue Data for Charts
 export const REVENUE_HISTORY = Array.from({ length: 15 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (14 - i));
-    const revenue = 4000 + Math.random() * 2000;
+
+    // Smoother trend with minimal daily variation
+    const baseRevenue = 5200;
+    const trend = Math.sin(i * 0.5) * 400; // Gentle weekly wave
+    const revenue = baseRevenue + trend + (Math.random() * 200 - 100);
+    const profit = revenue * 0.35 + (Math.random() * 50 - 25);
+    const costs = revenue - profit;
+
     return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: revenue,
-        profit: 1500 + Math.random() * 800,
-        costs: 2500 + Math.random() * 500,
-        orders: Math.floor(80 + Math.random() * 50),
+        revenue: Number(revenue.toFixed(2)),
+        profit: Number(profit.toFixed(2)),
+        costs: Number(costs.toFixed(2)),
+        orders: Math.floor(110 + trend / 15 + (Math.random() * 6 - 3)),
     };
 });
 

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 10, "column": 0}, "map": {"version":3,"sources":["file:///Users/dhruvlakhani/Documents/final%20project/Petpooja-intel/app/components/AuthProviders.js"],"sourcesContent":["\"use client\";\n\nimport { SessionProvider } from \"next-auth/react\";\n\nexport default function Providers({ children }) {\n    return <SessionProvider>{children}</SessionProvider>;\n}\n"],"names":[],"mappings":";;;;;AAEA;AAFA;;;AAIe,SAAS,UAAU,EAAE,QAAQ,EAAE;IAC1C,qBAAO,kSAAC,qNAAe;kBAAE;;;;;;AAC7B"}}]
+}

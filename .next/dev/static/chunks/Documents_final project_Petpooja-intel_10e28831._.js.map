@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/dhruvlakhani/Documents/final%20project/Petpooja-intel/app/page.js"],"sourcesContent":["\"use client\";\n\nimport { useEffect } from \"react\";\nimport { useRouter } from \"next/navigation\";\n\nexport default function RootPage() {\n  const router = useRouter();\n\n  useEffect(() => {\n    router.push(\"/login\");\n  }, [router]);\n\n  return (\n    <div className=\"h-screen w-screen flex items-center justify-center bg-slate-50\">\n      <div className=\"w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin\" />\n    </div>\n  );\n}\n"],"names":[],"mappings":";;;;;AAEA;AACA;;;AAHA;;;AAKe,SAAS;;IACtB,MAAM,SAAS,IAAA,sMAAS;IAExB,IAAA,8NAAS;8BAAC;YACR,OAAO,IAAI,CAAC;QACd;6BAAG;QAAC;KAAO;IAEX,qBACE,iPAAC;QAAI,WAAU;kBACb,cAAA,iPAAC;YAAI,WAAU;;;;;;;;;;;AAGrB;GAZwB;;QACP,sMAAS;;;KADF"}},
+    {"offset": {"line": 55, "column": 0}, "map": {"version":3,"sources":["file:///Users/dhruvlakhani/Documents/final%20project/Petpooja-intel/node_modules/next/navigation.js"],"sourcesContent":["module.exports = require('./dist/client/components/navigation')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO","ignoreList":[0]}}]
+}

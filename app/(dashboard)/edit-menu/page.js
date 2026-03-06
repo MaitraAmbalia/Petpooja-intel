@@ -403,8 +403,15 @@ export default function EditMenuPage() {
     });
 
     function catName(id) {
+        if (id === "all") return "All Items";
         return CATEGORIES.find(c => c.id === id)?.name || id;
     }
+
+    const handleToggleStatus = (id) => {
+        setItems(prev => prev.map(item =>
+            item.foodId === id ? { ...item, status: !item.status } : item
+        ));
+    };
 
     // Reset selected item if it's no longer in filtered list, or keep first if available
     const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || filteredItems[0];
@@ -669,9 +676,18 @@ export default function EditMenuPage() {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center justify-end gap-3">
-                                                                <button className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${item.popularityScore > 80 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                                                                    On
-                                                                </button>
+                                                                <div className="flex items-center gap-2 mr-2">
+                                                                    <span className={`text-[9px] font-black uppercase tracking-tighter ${item.status ? 'text-emerald-500' : 'text-slate-400'}`}>
+                                                                        {item.status ? 'Active' : 'Inactive'}
+                                                                    </span>
+                                                                    <Toggle
+                                                                        active={item.status}
+                                                                        onChange={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleToggleStatus(item.foodId);
+                                                                        }}
+                                                                    />
+                                                                </div>
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();

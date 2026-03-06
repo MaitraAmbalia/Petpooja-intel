@@ -63,14 +63,14 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <motion.div 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
                         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
                     />
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -96,11 +96,11 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Name</label>
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={editData.foodName}
-                                                onChange={(e) => setEditData({...editData, foodName: e.target.value})}
-                                                className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                onChange={(e) => setEditData({ ...editData, foodName: e.target.value })}
+                                                className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
@@ -108,19 +108,19 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                                 <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Base Price</label>
                                                 <div className="relative">
                                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">$</span>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        type="number"
                                                         value={editData.price}
-                                                        onChange={(e) => setEditData({...editData, price: parseFloat(e.target.value)})}
-                                                        className="w-full pl-8 pr-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                        onChange={(e) => setEditData({ ...editData, price: parseFloat(e.target.value) })}
+                                                        className="w-full pl-8 pr-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                                     />
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Category</label>
-                                                <select 
+                                                <select
                                                     value={editData.category}
-                                                    onChange={(e) => setEditData({...editData, category: e.target.value})}
+                                                    onChange={(e) => setEditData({ ...editData, category: e.target.value })}
                                                     className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900 appearance-none bg-white"
                                                 >
                                                     {CATEGORIES.filter(c => c.id !== 'all').map(c => (
@@ -139,20 +139,20 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Cost</label>
-                                                <input 
-                                                    type="number" 
+                                                <input
+                                                    type="number"
                                                     value={editData.foodCost}
-                                                    onChange={(e) => setEditData({...editData, foodCost: parseFloat(e.target.value)})}
-                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                    onChange={(e) => setEditData({ ...editData, foodCost: parseFloat(e.target.value) })}
+                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                                 />
                                             </div>
                                             <div>
                                                 <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Op Cost</label>
-                                                <input 
-                                                    type="number" 
+                                                <input
+                                                    type="number"
                                                     value={editData.opCost}
-                                                    onChange={(e) => setEditData({...editData, opCost: parseFloat(e.target.value)})}
-                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900" 
+                                                    onChange={(e) => setEditData({ ...editData, opCost: parseFloat(e.target.value) })}
+                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                                 />
                                             </div>
                                         </div>
@@ -168,8 +168,8 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                             <div className="space-y-6">
                                 <div className="flex justify-between items-center">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Ingredients List</h3>
-                                    <button 
-                                        onClick={() => setEditData({...editData, ingredients: [...(editData.ingredients || []), { name: "", quantity: "", unit: "g" }]})}
+                                    <button
+                                        onClick={() => setEditData({ ...editData, ingredients: [...(editData.ingredients || []), { name: "", quantity: "", unit: "g" }] })}
                                         className="flex items-center gap-1 text-[10px] font-black text-indigo-600 uppercase"
                                     >
                                         <Plus size={14} /> Add Ingredient
@@ -178,34 +178,34 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {editData.ingredients?.map((ing, i) => (
                                         <div key={i} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 value={ing.name}
                                                 placeholder="Ingredient Name"
                                                 onChange={(e) => {
                                                     const newIngs = [...editData.ingredients];
                                                     newIngs[i].name = e.target.value;
-                                                    setEditData({...editData, ingredients: newIngs});
+                                                    setEditData({ ...editData, ingredients: newIngs });
                                                 }}
                                                 className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
                                             />
                                             <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100 shadow-sm">
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     value={ing.quantity}
                                                     onChange={(e) => {
                                                         const newIngs = [...editData.ingredients];
                                                         newIngs[i].quantity = e.target.value;
-                                                        setEditData({...editData, ingredients: newIngs});
+                                                        setEditData({ ...editData, ingredients: newIngs });
                                                     }}
                                                     className="w-12 text-center font-black text-xs text-slate-900 outline-none"
                                                 />
-                                                <select 
+                                                <select
                                                     value={ing.unit}
                                                     onChange={(e) => {
                                                         const newIngs = [...editData.ingredients];
                                                         newIngs[i].unit = e.target.value;
-                                                        setEditData({...editData, ingredients: newIngs});
+                                                        setEditData({ ...editData, ingredients: newIngs });
                                                     }}
                                                     className="text-[10px] font-black text-slate-400 uppercase bg-transparent outline-none"
                                                 >
@@ -215,8 +215,8 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                                     <option value="leaves">leaves</option>
                                                 </select>
                                             </div>
-                                            <button 
-                                                onClick={() => setEditData({...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i)})}
+                                            <button
+                                                onClick={() => setEditData({ ...editData, ingredients: editData.ingredients.filter((_, idx) => idx !== i) })}
                                                 className="p-1 text-slate-300 hover:text-rose-500 transition-colors"
                                             >
                                                 <Trash2 size={16} />
@@ -232,8 +232,8 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sizes / Variants</h3>
-                                        <button 
-                                            onClick={() => setEditData({...editData, variants: [...(editData.variants || []), { name: "", price: 0 }]})}
+                                        <button
+                                            onClick={() => setEditData({ ...editData, variants: [...(editData.variants || []), { name: "", price: 0 }] })}
                                             className="flex items-center gap-1 text-[10px] font-black text-indigo-600 uppercase"
                                         >
                                             <Plus size={14} /> Add Size
@@ -242,32 +242,32 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                     <div className="space-y-2">
                                         {editData.variants?.map((v, i) => (
                                             <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     value={v.name}
                                                     placeholder="Size Name"
                                                     onChange={(e) => {
                                                         const newVariants = [...editData.variants];
                                                         newVariants[i].name = e.target.value;
-                                                        setEditData({...editData, variants: newVariants});
+                                                        setEditData({ ...editData, variants: newVariants });
                                                     }}
                                                     className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
                                                 />
                                                 <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
                                                     <span className="text-[10px] font-black text-slate-400">$</span>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        type="number"
                                                         value={v.price}
                                                         onChange={(e) => {
                                                             const newVariants = [...editData.variants];
                                                             newVariants[i].price = parseFloat(e.target.value) || 0;
-                                                            setEditData({...editData, variants: newVariants});
+                                                            setEditData({ ...editData, variants: newVariants });
                                                         }}
                                                         className="w-16 bg-transparent font-black text-sm text-slate-900 outline-none text-right"
                                                     />
                                                 </div>
-                                                <button 
-                                                    onClick={() => setEditData({...editData, variants: editData.variants.filter((_, idx) => idx !== i)})}
+                                                <button
+                                                    onClick={() => setEditData({ ...editData, variants: editData.variants.filter((_, idx) => idx !== i) })}
                                                     className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors bg-slate-50 rounded-lg"
                                                 >
                                                     <Trash2 size={14} />
@@ -281,8 +281,8 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Addons</h3>
-                                        <button 
-                                            onClick={() => setEditData({...editData, addons: [...(editData.addons || []), { name: "", price: 0 }]})}
+                                        <button
+                                            onClick={() => setEditData({ ...editData, addons: [...(editData.addons || []), { name: "", price: 0 }] })}
                                             className="flex items-center gap-1 text-[10px] font-black text-orange-600 uppercase"
                                         >
                                             <Plus size={14} /> Add Addon
@@ -291,32 +291,32 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                     <div className="space-y-2">
                                         {editData.addons?.map((a, i) => (
                                             <div key={i} className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-orange-400">
-                                                <input 
-                                                    type="text" 
+                                                <input
+                                                    type="text"
                                                     value={a.name}
                                                     placeholder="Addon Name"
                                                     onChange={(e) => {
                                                         const newAddons = [...editData.addons];
                                                         newAddons[i].name = e.target.value;
-                                                        setEditData({...editData, addons: newAddons});
+                                                        setEditData({ ...editData, addons: newAddons });
                                                     }}
                                                     className="flex-1 bg-transparent font-bold text-sm text-slate-700 outline-none"
                                                 />
                                                 <div className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg">
                                                     <span className="text-[10px] font-black text-slate-400">+$</span>
-                                                    <input 
-                                                        type="number" 
+                                                    <input
+                                                        type="number"
                                                         value={a.price}
                                                         onChange={(e) => {
                                                             const newAddons = [...editData.addons];
                                                             newAddons[i].price = parseFloat(e.target.value) || 0;
-                                                            setEditData({...editData, addons: newAddons});
+                                                            setEditData({ ...editData, addons: newAddons });
                                                         }}
                                                         className="w-12 bg-transparent font-black text-sm text-slate-900 outline-none text-right"
                                                     />
                                                 </div>
-                                                <button 
-                                                    onClick={() => setEditData({...editData, addons: editData.addons.filter((_, idx) => idx !== i)})}
+                                                <button
+                                                    onClick={() => setEditData({ ...editData, addons: editData.addons.filter((_, idx) => idx !== i) })}
                                                     className="p-1 px-2 text-slate-300 hover:text-rose-500 transition-colors bg-slate-50 rounded-lg"
                                                 >
                                                     <Trash2 size={14} />
@@ -333,7 +333,7 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                             <button onClick={onClose} className="px-8 py-3.5 rounded-2xl border border-slate-200 font-black text-sm text-slate-500 hover:bg-white transition-all">
                                 Discard Changes
                             </button>
-                            <button 
+                            <button
                                 onClick={() => onSave(editData)}
                                 className="px-12 py-3.5 rounded-2xl bg-slate-900 text-white font-black text-sm shadow-xl hover:bg-slate-800 transition-all active:scale-95"
                             >
@@ -422,7 +422,7 @@ export default function EditMenuPage() {
                         <button className="px-5 py-2.5 rounded-xl border border-slate-200 font-bold text-sm text-slate-600 hover:bg-slate-50 transition-all flex items-center gap-2 bg-white">
                             <CloudUpload size={18} /> Sync Menu
                         </button>
-                        <button 
+                        <button
                             onClick={openAddModal}
                             className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
                         >
@@ -461,7 +461,7 @@ export default function EditMenuPage() {
                                     const Icon = iconMap[cat.icon] || LayoutGrid;
                                     const isActive = selectedCategory === cat.id;
                                     return (
-                                        <div 
+                                        <div
                                             key={cat.id}
                                             className={`group flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer ${isActive ? 'bg-slate-900 shadow-xl' : 'hover:bg-slate-50'}`}
                                             onClick={() => setSelectedCategory(cat.id)}
@@ -473,9 +473,9 @@ export default function EditMenuPage() {
                                                 <span className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-600'}`}>{cat.name}</span>
                                             </div>
                                             <div onClick={(e) => e.stopPropagation()}>
-                                                <Toggle 
-                                                    active={categoryStates[cat.id]} 
-                                                    onChange={() => setCategoryStates(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))} 
+                                                <Toggle
+                                                    active={categoryStates[cat.id]}
+                                                    onChange={() => setCategoryStates(prev => ({ ...prev, [cat.id]: !prev[cat.id] }))}
                                                 />
                                             </div>
                                         </div>
@@ -486,14 +486,14 @@ export default function EditMenuPage() {
 
                         {/* Quick Stats or Help Card */}
                         <div className="p-6 rounded-[32px] bg-indigo-600 text-white shadow-xl relative overflow-hidden group">
-                           <div className="relative z-10">
+                            <div className="relative z-10">
                                 <h3 className="font-black text-lg mb-2 italic">Pro Tip!</h3>
                                 <p className="text-indigo-100 text-sm font-medium">Use Bulk Edit to update prices across all categories in seconds.</p>
                                 <button className="mt-4 px-4 py-2 bg-white text-indigo-600 rounded-xl text-xs font-black uppercase hover:scale-105 transition-transform">Get Started</button>
-                           </div>
-                           <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
+                            </div>
+                            <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform">
                                 <Database size={120} />
-                           </div>
+                            </div>
                         </div>
                     </div>
 
@@ -503,7 +503,7 @@ export default function EditMenuPage() {
                         <div className="flex flex-col sm:flex-row gap-4 items-center">
                             <div className="flex-1 relative w-full">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input 
+                                <input
                                     type="text"
                                     placeholder="Search your items by name or ID..."
                                     value={searchTerm}
@@ -515,7 +515,7 @@ export default function EditMenuPage() {
                                 <button className="flex-1 sm:flex-none px-6 py-3.5 bg-white rounded-2xl border border-slate-200 font-bold text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
                                     <Filter size={18} /> Advanced
                                 </button>
-                                <button 
+                                <button
                                     onClick={openAddModal}
                                     className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm"
                                 >
@@ -543,7 +543,7 @@ export default function EditMenuPage() {
                                             {filteredItems.map((item) => {
                                                 const isSelected = activeItem?.foodId === item.foodId;
                                                 return (
-                                                    <motion.tr 
+                                                    <motion.tr
                                                         layout
                                                         initial={{ opacity: 0 }}
                                                         animate={{ opacity: 1 }}
@@ -584,26 +584,26 @@ export default function EditMenuPage() {
                                                                 <button className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-sm ${item.popularityScore > 80 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'}`}>
                                                                     On
                                                                 </button>
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleDelete(item.foodId);
-                                                                        }}
-                                                                        className="p-2 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                                                    >
-                                                                        <Trash2 size={16} className="text-slate-400 hover:text-rose-500" />
-                                                                    </button>
-                                                                    <button 
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setSelectedItem(item);
-                                                                            setIsAddingNew(false);
-                                                                            setIsEditModalOpen(true);
-                                                                        }}
-                                                                        className="p-2 hover:bg-white hover:shadow-md rounded-xl transition-all opacity-0 group-hover:opacity-100"
-                                                                    >
-                                                                        <Edit3 size={16} className="text-slate-400 hover:text-slate-900" />
-                                                                    </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDelete(item.foodId);
+                                                                    }}
+                                                                    className="p-2 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                                >
+                                                                    <Trash2 size={16} className="text-slate-400 hover:text-rose-500" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setSelectedItem(item);
+                                                                        setIsAddingNew(false);
+                                                                        setIsEditModalOpen(true);
+                                                                    }}
+                                                                    className="p-2 hover:bg-white hover:shadow-md rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                                                                >
+                                                                    <Edit3 size={16} className="text-slate-400 hover:text-slate-900" />
+                                                                </button>
                                                             </div>
                                                         </td>
                                                     </motion.tr>
@@ -615,89 +615,14 @@ export default function EditMenuPage() {
                             </div>
                         </div>
 
-                        {/* Detailed Panels for Selected Item */}
-                        {activeItem && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                            >
-                                <div className="glass p-8 rounded-[40px] border border-slate-200/50 shadow-premium">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div>
-                                            <h4 className="font-black text-slate-900 uppercase text-xs tracking-[0.2em] mb-1">Ingredients</h4>
-                                            <p className="text-sm font-medium text-slate-400">Total {activeItem.ingredients?.length} items used</p>
-                                        </div>
-                                        <button className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg active:scale-95">
-                                            <Plus size={18} />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {activeItem.ingredients?.map((ing, i) => (
-                                            <div key={i} className="flex justify-between items-center bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm group hover:border-slate-200 transition-all">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-900 transition-colors">
-                                                        <Database size={18} />
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-700">{ing.name}</span>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="text-sm font-black text-slate-900">{ing.quantity} {ing.unit}</span>
-                                                    <button className="text-slate-300 hover:text-rose-500 transition-colors"><Trash2 size={16} /></button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {!activeItem.ingredients?.length && <p className="text-center py-8 text-slate-400 font-bold italic">No ingredients added yet.</p>}
-                                    </div>
-                                </div>
-                                <div className="glass p-8 rounded-[40px] border border-slate-200/50 shadow-premium">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <div>
-                                            <h4 className="font-black text-slate-900 uppercase text-xs tracking-[0.2em] mb-1">Variants & Addons</h4>
-                                            <p className="text-sm font-medium text-slate-400">Customization options</p>
-                                        </div>
-                                        <button className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg active:scale-95">
-                                            <Plus size={18} />
-                                        </button>
-                                    </div>
-                                    <div className="space-y-6">
-                                        {/* Variants */}
-                                        <div>
-                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Sizes/Variants</h5>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {activeItem.variants?.map((v, i) => (
-                                                    <div key={i} className="flex justify-between items-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                                        <span className="text-sm font-bold text-slate-700">{v.name}</span>
-                                                        <span className="text-sm font-black text-slate-900">${v.price.toFixed(2)}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        {/* Addons */}
-                                        <div>
-                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Addons</h5>
-                                            <div className="grid grid-cols-1 gap-2">
-                                                {activeItem.addons?.map((a, i) => (
-                                                    <div key={i} className="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-500">
-                                                        <span className="text-sm font-bold text-slate-700">{a.name}</span>
-                                                        <span className="text-sm font-black text-slate-900">+${a.price.toFixed(2)}</span>
-                                                    </div>
-                                                ))}
-                                                {!activeItem.addons?.length && <p className="text-xs text-slate-400 font-medium italic">No addons available.</p>}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
                     </div>
                 </div>
             </div>
 
-            <EditItemModal 
-                item={selectedItem} 
-                isOpen={isEditModalOpen} 
-                onClose={() => setIsEditModalOpen(false)} 
+            <EditItemModal
+                item={selectedItem}
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
                 onSave={handleSave}
             />
         </DashboardLayout>

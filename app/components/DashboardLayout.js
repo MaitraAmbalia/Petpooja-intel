@@ -33,16 +33,7 @@ const sidebarGroups = [
         title: null,
         items: [
             { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-            {
-                name: "Menu", icon: UtensilsCrossed, path: "/edit-menu", children: [
-                    { name: "Starters", path: "/menu/starters" },
-                    { name: "Breakfast", path: "/menu/breakfast" },
-                    { name: "Lunch", path: "/menu/lunch" },
-                    { name: "Dinner", path: "/menu/dinner" },
-                    { name: "Sweets", path: "/menu/sweets" },
-                    { name: "Drinks", path: "/menu/drinks" },
-                ]
-            },
+            { name: "Menu", icon: UtensilsCrossed, path: "/edit-menu" },
             { name: "Orders", icon: PhoneCall, path: "/live-orders", badge: 89 },
             { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
             { name: "Messages", icon: Bell, path: "/messages" },
@@ -117,15 +108,6 @@ export default function DashboardLayout({ children }) {
                                         )}
                                     </div>
                                 </Link>
-                                {item.children && isActive && (
-                                    <div className="ml-9 mt-1 space-y-1 border-l-2 border-orange-100 pl-4">
-                                        {item.children.map(child => (
-                                            <div key={child.name} className="py-2 text-xs font-medium text-slate-500 hover:text-orange-500 cursor-pointer transition-colors">
-                                                • {child.name}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                             </div>
                         );
                     })}

@@ -7,8 +7,11 @@ from fastapi.responses import HTMLResponse, Response
 import uvicorn
 from dotenv import load_dotenv
 
-from agent import ConversationManager  # type: ignore
-from audio import DeepgramTranscriber, SarvamSynthesizer  # type: ignore
+from agent import ConversationManager
+from audio import DeepgramTranscriber, DeepgramSynthesizer, TranslatorAndLanguageDetector
+from database import update_order_status, save_transcript, orders_collection
+from sms import send_order_success_sms, send_unsuccessful_call_sms, send_missing_info_sms
+
 load_dotenv()
 
 app = FastAPI(title="Petpooja AI Voice Agent")
@@ -62,8 +65,9 @@ async def media_stream(websocket: WebSocket):
     # 4. Stream Groq's response chunks to ElevenLabs WebSocket.
     # 5. Receive mu-law audio from ElevenLabs and send to Twilio.
 
-    # Initialize the Synthesizer
-    synthesizer = SarvamSynthesizer()
+    # Initialize the Synthesizer and Translator
+    synthesizer = DeepgramSynthesizer()
+    translator = TranslatorAndLanguageDetector()
 
     async def send_audio_to_twilio(base64_audio: str):
         if stream_sid:
@@ -76,16 +80,60 @@ async def media_stream(websocket: WebSocket):
             }
             await websocket.send_json(msg)
 
-    # Callback when Deepgram hears a final phrase
-    async def on_transcript(transcript: str):
-        print(f"[Agent hearing]: {transcript}")
-        # Send text to Groq LLM
-        ai_response = await agent.process_user_input(transcript)
-        print(f"[Agent speaking]: {ai_response}")
+    async def send_clear_to_twilio():
+        """Send a Clear message to instantly halt currently playing audio in Twilio."""
+        if stream_sid:
+            msg = {
+                "event": "clear",
+                "streamSid": stream_sid
+            }
+            await websocket.send_json(msg)
+
+    # Callback when Deepgram hears speech
+    agent_is_speaking = False
+    
+    async def on_transcript(transcript: str, is_final: bool):
+        nonlocal agent_is_speaking
         
-        # Turn AI text response back into Audio
-        audio_bytes = await synthesizer.synthesize_to_mulaw(ai_response)
-        if audio_bytes:
+        # If user starts speaking while AI is speaking, interrupt it!
+        if transcript and not is_final:
+            if agent_is_speaking:
+                print(f"[Interruption Detected] User started speaking: '{transcript}'")
+                await send_clear_to_twilio()
+                agent_is_speaking = False
+            return # Wait for final transcript before passing to LLM
+            
+        if not is_final or not transcript.strip():
+            return
+            
+        print(f"[User Original]: {transcript}")
+        agent_is_speaking = False # User just finished talking
+        
+        # 1. Detect language and translate to English for LLM
+        # user_lang = translator.detect_language(transcript)
+        # english_transcript = translator.translate_to_english(transcript, user_lang)
+        # if user_lang != 'en':
+        #     print(f"[Translated to English for LLM]: {english_transcript}")
+        user_lang = 'en'
+        english_transcript = transcript
+        
+        # 2. Get LLM Response
+        ai_response_english = await agent.process_user_input(english_transcript)
+        print(f"[Agent thinking in English]: {ai_response_english}")
+        
+        # 3. Translate back to user's language
+        # ai_response_localized = translator.translate_from_english(ai_response_english, user_lang)
+        # if user_lang != 'en':
+        #     print(f"[Agent speaking in {user_lang}]: {ai_response_localized}")
+        # else:
+        #     print(f"[Agent speaking]: {ai_response_localized}")
+        ai_response_localized = ai_response_english
+        print(f"[Agent speaking]: {ai_response_localized}")
+        
+        # 4. Synthesize and Stream Audio
+        agent_is_speaking = True
+        audio_bytes = await synthesizer.synthesize_to_mulaw(ai_response_localized)
+        if audio_bytes and agent_is_speaking:
             b64_audio = base64.b64encode(audio_bytes).decode('utf-8')
             await send_audio_to_twilio(b64_audio)
             
@@ -109,7 +157,7 @@ async def media_stream(websocket: WebSocket):
                 # Initialize Deepgram STT stream here
                 await deepgram_ws.connect()
                 
-                # Say initial greeting via ElevenLabs TTS
+                # Say initial greeting via Deepgram TTS
                 intro_text = await agent.get_initial_greeting()
                 print(f"[Agent speaking]: {intro_text}")
                 audio_bytes = await synthesizer.synthesize_to_mulaw(intro_text)
@@ -132,8 +180,53 @@ async def media_stream(websocket: WebSocket):
     except Exception as e:
         print(f"[WebSocket] Error: {e}")
     finally:
-        print("[WebSocket] Connection closed.")
+        print("[WebSocket] Connection closed. Post-process started.")
         await deepgram_ws.close()
+        
+        # Determine Call Outcome (Case 1, 2, 3, 4)
+        if hasattr(agent, "is_cancelled") and agent.is_cancelled:
+            print("[Post-process] Case 4: Call cancelled during conversation. No action taken.")
+            
+        elif hasattr(agent, "is_completed") and agent.is_completed and hasattr(agent, "order_id") and agent.order_id:
+            print(f"[Post-process] Case 1: Call successful. Order {agent.order_id}")
+            # Mark order successful in DB
+            await update_order_status(agent.order_id, {"callSuccessful": True, "status": "complete"})
+            # Fetch items/price to send SMS
+            try:
+                order_data = await orders_collection.find_one({"orderId": agent.order_id})
+                if order_data:
+                    send_order_success_sms(caller_number, agent.order_id, order_data.get("items", []), order_data.get("totalPrice", 0))
+            except Exception as e:
+                print(f"[SMS Error finding order] {e}")
+                
+        else:
+            # Did not complete an order. Check if conversation happened
+            if len(agent.messages) > 3: # i.e. beyond initial greeting
+                # If they were trying to order but didn't finish
+                prompt_str = " ".join([m.content for m in agent.messages if hasattr(m, "content")])
+                if "address" in prompt_str.lower() and not "Order ID is" in prompt_str:
+                     print("[Post-process] Case 3: Missing Information.")
+                     send_missing_info_sms(caller_number)
+                else:
+                    print("[Post-process] Case 2: Unsuccessful drop.")
+                    send_unsuccessful_call_sms(caller_number)
+            else:
+                 print("[Post-process] Case 2: Fast drop.")
+                 send_unsuccessful_call_sms(caller_number)
+                 
+        # Save transcript to DB
+        messages_to_save = []
+        for msg in agent.messages:
+             role = "system"
+             if hasattr(msg, "type"): role = msg.type
+             messages_to_save.append({"role": role, "content": msg.content[:2000] if hasattr(msg, 'content') else str(msg)[:2000]})
+             
+        try:
+             order_id_val = getattr(agent, "order_id", None)
+             await save_transcript(caller_number, order_id_val, messages_to_save)
+        except Exception as e:
+             print(f"[DB Error saving transcript]: {e}")
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

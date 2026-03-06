@@ -1,3 +1,6 @@
+# Node
+node_modules/
+
 # Next.js
 .next/
 out/
@@ -8,9 +11,6 @@ ai/venv/
 __pycache__/
 *.pyc
 
-# Environment variables
+# Environment
 .env
 ai/.env
-
-# Logs
-*.log

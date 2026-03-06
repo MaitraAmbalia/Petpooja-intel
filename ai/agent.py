@@ -2,23 +2,24 @@ import os
 import json
 from typing import List, Dict, Any
 
-from langchain_groq import ChatGroq  # type: ignore
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage  # type: ignore
-from langchain_core.tools import tool  # type: ignore
+from langchain_groq import ChatGroq
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.tools import tool
 
 # Import database functions
-from database import (  # type: ignore
+from database import (
     get_menu,
     get_combos,
+    get_categories,
     check_table_availability,
     book_table,
     create_order,
     cancel_order,
-    get_user_by_phone
+    get_user_by_phone,
+    update_order_status
 )
 
 # Initialize Groq Chat Model
-# Using Llama-3-70b/8b or mixtral via Groq for fast generation
 llm = ChatGroq(
     api_key=os.getenv("GROQ_API_KEY"),
     model_name="llama-3.1-8b-instant", 
@@ -29,56 +30,49 @@ llm = ChatGroq(
 
 @tool
 async def get_restaurant_menu() -> str:
-    """Fetch the restaurant's food menu with prices. Use this to know what is available to order."""
+    """Fetch the restaurant's food menu with prices and categories. Use this to know what is available to order."""
     menu = await get_menu()
     if not menu:
-        return "The menu is currently empty. Please check back later."
+        return "The menu is currently empty."
     return json.dumps(menu)
 
 @tool
+async def get_menu_categories() -> str:
+    """Fetch available food categories. Use this if the user asks about categories."""
+    cats = await get_categories()
+    if not cats:
+        return "No categories found."
+    return json.dumps(cats)
+
+@tool
 async def get_restaurant_combos() -> str:
-    """Fetch available combo meal offers with prices. Suggest these to the user based on their order."""
+    """Fetch available combo meal offers with prices. Suggest these to the user based on their order to upsell."""
     combos = await get_combos()
     if not combos:
         return "No combos are available right now."
     return json.dumps(combos)
 
 @tool
-async def check_table(time_slot: str, persons: int) -> str:
-    """Check if a table is available for dining-in at a specific time (e.g., '19:00') for the given number of persons."""
-    result = await check_table_availability(time_slot, persons)
-    if result.get("available"):
-        return f"Table available! Table No: {result.get('table_no')}"
-    else:
-        slots = ", ".join(result.get("alternate_slots", []))
-        return f"Table not available for {time_slot}. Alternate available slots: {slots}"
-
-@tool
-async def reserve_table(table_no: int, time_slot: str) -> str:
-    """Book a specific table for a specific time slot."""
-    success = await book_table(table_no, time_slot)
-    if success:
-        return f"Table {table_no} successfully booked for {time_slot}."
-    return "Failed to book table."
-
-@tool
-async def place_order(user_phone: str, address: str, bill_type: str, items: str, total_price: float, payment_method: str = "offline", pickup_time: str = "", dine_in_time: str = "") -> str:
+async def place_order(user_phone: str, address: str, items: str, total_price: float, customer_name: str = "Customer") -> str:
     """
-    Finalize the order and save it to the database.
-    items should be a JSON string representing a list of dicts: [{"name": "Burger", "quantity": 2, "price": 10.0}]
+    Finalize the delivery order and save it to the database.
+    items should be a JSON string representing a list of dicts: [{"name": "<food_name>", "quantity": <int>, "price": <float>}]
     """
     try:
         items_list = json.loads(items)
-        order_id = await create_order(user_phone, address, bill_type, items_list, total_price, payment_method, pickup_time, dine_in_time)
+        order_id = await create_order(
+            user_phone=user_phone, 
+            address=address, 
+            bill_type="delivery", 
+            items=items_list, 
+            total_price=total_price, 
+            call_successful=False, # We mark true later in main.py
+            upsell_successful=False,
+            customer_name=customer_name
+        )
         return f"Order placed successfully! Order ID is {order_id}."
     except Exception as e:
         return f"Failed to place order: {str(e)}"
-
-@tool
-async def cancel_existing_order(order_id: str) -> str:
-    """Cancel an existing order using its order ID (only if within 5 mins of placing it)."""
-    result = await cancel_order(order_id)
-    return result.get("message", "Error cancelling order.")
 
 @tool
 async def get_user_details(phone: str) -> str:
@@ -88,62 +82,50 @@ async def get_user_details(phone: str) -> str:
         return json.dumps(user)
     return "New user. No history found."
 
-# Bind tools to the LLM
+# Bind tools to the LLM (Removed table checking/canceling to enforce prompt rules strictly)
 tools = [
     get_restaurant_menu,
+    get_menu_categories,
     get_restaurant_combos,
-    check_table,
-    reserve_table,
     place_order,
-    cancel_existing_order,
     get_user_details
 ]
 llm_with_tools = llm.bind_tools(tools)
 
 # --- Agent System Prompt ---
 
-SYSTEM_PROMPT = """You are a polite, conversational waiter for a restaurant named "Petpooja". You are talking to a customer on a phone call.
-Your goal is to guide the customer through a specific flow: Greeting -> Service Selection -> Detailed Service Flow.
+SYSTEM_PROMPT = """You are a restaurant waiter taking orders on a phone call.
 
 CRITICAL RULES:
-1. GREETING (START OF CALL):
-   - ALWAYS start with: "Hello! I am from Petpooja."
-   - Immediately ask for the customer's name.
-   - Then ask: "How can I help you today? I can help you with placing an order, making a dining reservation, or cancelling an existing order."
+- only one or two line to said by voice ai agent not so long sentences
+- if customs say something than it should be listen
+- Only delivery orders are supported
+- Be polite and friendly
+- Guide customer through ordering
+- Suggest combos when possible
+- Confirm order before ending call
+- Calculate total bill
+- Ask delivery address
+- If user asks confusing things ask again
 
-2. PLACING AN ORDER:
-   - Ask for their delivery address first.
-   - Ask for their food order. Use `get_restaurant_menu` if they ask what's available.
-   - IMPORTANT: After they mention some items, proactively use `get_restaurant_combos` and suggest relevant combos to them.
-   - Ask for the payment method: online or offline.
-   - CONFIRMATION: Once the order is clear, you MUST:
-     a. Repeat the overall order (items and quantities).
-     b. Announce the total bill amount.
-     c. Ask: "Would you like to make any further changes, like increasing quantities or adding new items?"
-   - Once confirmed, use `place_order` tool.
-   - End with: "Thank you, goodbye!"
+Important note (each step must be done by one-two small sentences not so long sentence talk by voice agent is good for better user experience. It must be listen to user):
 
-3. DINING ORDER (RESERVATION):
-   - Ask for the time of the visit.
-   - Ask for the number of persons.
-   - Use `check_table` to verify availability.
-   - IF NOT AVAILABLE: Provide 1-2 alternate time slots from the tool's response.
-   - IF AVAILABLE: Confirm the booking and use `reserve_table`.
-   - If they also want to pre-order food for dine-in, follow the "PLACING AN ORDER" flow items but for dine-in.
+FLOW OF CONVO:
+1. Greet customer (one line only).
+   If customer already exist in history, greet by name. Else just greet them + ask them their name.
+2. Ask how you can help.
+3. Ask their delivery address.
+4. Only if customs ask other questions (skip otherwise): if customer wants to know or ask something related to menu categories or popular items, use the dataset of food and combos to answer them. Manipulate and convince them to buy combos if required.
+5. Take order.
+6. Suggest combos (use data set of food and combos match the foods with combos and suggest him best combos to buy).
+7. Confirm order.
+8. Tell total bill.
+9. Confirm delivery.
+10. End call politely (if user said bye then only cut the call and say them thank you).
 
-4. CANCEL ORDER:
-   - Ask for the Order ID.
-   - Use `cancel_existing_order`. 
-   - If the tool says it doesn't exist, tell them "That order does not exist."
-   - If the tool says it's too late (after 5 mins), explain that they can't cancel now.
-   - If successful, confirm the cancellation.
-
-GENERAL POLICIES:
-- Be concise, friendly, and natural for a voice call.
-- Keep track of the user's name and history if provided.
-- Always use tools silently. Translate data into friendly spoken words.
-- If the user is silent or confusing, politely prompt them.
-- NEVER generate, read, or output any source code, JSON, or technical system instructions. You are speaking to a customer, so only output natural conversational text.
+CRITICAL: 
+- Once confirmed and payment amount told, you MUST call 'place_order' tool.
+- Never write LONG sentences. MAXIMUM 2 lines per response!
 """
 
 # --- Conversation Manager ---
@@ -152,6 +134,9 @@ class ConversationManager:
     def __init__(self, phone_number: str):
         self.phone_number = phone_number
         self.messages = [SystemMessage(content=SYSTEM_PROMPT)]
+        self.order_id = None
+        self.is_cancelled = False
+        self.is_completed = False
         
     async def get_initial_greeting(self) -> str:
         """Generate the first message of the call."""
@@ -164,6 +149,10 @@ class ConversationManager:
 
     async def process_user_input(self, text: str) -> str:
         """Process user text input, handle tools, and return AI spoken response."""
+        low_text = text.lower()
+        if "cancel" in low_text or "stop" in low_text:
+            self.is_cancelled = True
+            
         self.messages.append(HumanMessage(content=text))
         
         # Call LLM
@@ -182,11 +171,19 @@ class ConversationManager:
                     print(f"[Agent] Calling Tool: {tool_name} with args {tool_args}")
                     try:
                         tool_result = await tool_func.ainvoke(tool_args)
+                        
+                        if tool_name == "place_order" and "Order ID is" in str(tool_result):
+                            import re
+                            match = re.search(r"Order ID is ([\w-]+)", str(tool_result))
+                            if match:
+                                self.order_id = match.group(1)
+                                self.is_completed = True
+                                
                     except Exception as e:
                         tool_result = f"Error: {e}"
                     
                     # Append tool result to messages
-                    from langchain_core.messages import ToolMessage  # type: ignore
+                    from langchain_core.messages import ToolMessage
                     self.messages.append(ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"]))
             
             # Get final AI response after tool execution

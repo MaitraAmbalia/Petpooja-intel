@@ -21,8 +21,10 @@ def initiate_call(to_number: str):
         print("Please set TWILIO_SERVER_HOST in your .env file!")
         return
         
+    host_no_protocol = ngrok_host.replace("https://", "").replace("http://", "")
+    
     call = client.calls.create(
-        url=f"https://{ngrok_host}/incoming-call",
+        url=f"https://{host_no_protocol}/incoming-call",
         to=to_number,
         from_=twilio_number
     )
@@ -31,7 +33,7 @@ def initiate_call(to_number: str):
 
 if __name__ == "__main__":
     # Replace this with the phone number you want to call (including country code, e.g., +91...)
-    target_phone_number = "+917016285352"  
+    target_phone_number = "+919510242105"  
     
     # You must have your FastAPI server running and ngrok exposed before dialing
     initiate_call(target_phone_number)

@@ -12,13 +12,14 @@ MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
 client = AsyncIOMotorClient(MONGODB_URI)
 db = client.petpooja_db  # Using 'petpooja_db' as default database
 
-# Database Collections
+# Database Collections mapped exactly to the required names
 users_collection = db["users"]
-restaurants_collection = db["restaurants"]
-menu_collection = db["menu"]      # Food items
-combos_collection = db["combos"]
-orders_collection = db["orders"]
-tables_collection = db["tables"]
+menu_collection = db["FoodItem"]
+combos_collection = db["Combo"]
+orders_collection = db["VoiceOrder"]
+transcripts_collection = db["Transcript"]
+categories_collection = db["Category"]
+tables_collection = db["tables"] # keeping tables for dine-in availability check if needed
 
 
 # --- Pydantic Schemas for Reference & Validation ---
@@ -30,35 +31,67 @@ class UserSchema(BaseModel):
     history: List[Dict[str, Any]] = [] # list of {"order_id": "...|combo_id", "quantity": int}
     final_bill: Optional[float] = 0.0
 
-class RestaurantSchema(BaseModel):
+class CategorySchema(BaseModel):
+    categoryId: str
     name: str
-    address: str
+    icon: Optional[str] = None
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
 class FoodItemSchema(BaseModel):
-    food_id: str
-    food_name: str
+    foodId: str
+    name: str
+    description: Optional[str] = ""
     price: float
+    cost: Optional[float] = 0.0
+    margin: Optional[float] = 0.0
+    category: str
+    isVeg: bool = True
+    ingredients: List[Dict[str, Any]] = []
+    addons: List[Dict[str, Any]] = []
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
 class ComboSchema(BaseModel):
-    combo_id: str
-    description: str
-    price: float
+    comboId: str
+    name: str
+    description: Optional[str] = ""
+    items: List[Dict[str, Any]] = []
+    totalPrice: float
+    triggerCategory: Optional[str] = ""
+    isActive: bool = True
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
 class OrderItemSchema(BaseModel):
     name: str
     quantity: int
     price: float
 
-class OrderSchema(BaseModel):
-    order_id: str
-    user_phone: str
-    time_placed: datetime = Field(default_factory=datetime.utcnow)
-    bill_type: str # e.g., "delivery", "dine-in", "pickup"
+class VoiceOrderSchema(BaseModel):
+    orderId: str
+    phoneNo: str
+    customerName: Optional[str] = "Customer"
+    orderType: str = "delivery"
+    address: Optional[str] = ""
+    time: str
+    status: str = "pending"
+    kotStatus: Optional[str] = "pending"
     items: List[OrderItemSchema]
-    total_price: float
-    status: str = "placed" # e.g., "placed", "cancelled", "completed"
-    payment_method: str = "offline"
-    frontend_view: Dict[str, Any] = {}
+    totalPrice: float
+    callSuccessful: bool = False
+    upsellSuccessful: bool = False
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+class TranscriptSchema(BaseModel):
+    transcriptId: str
+    phoneNo: str
+    orderId: Optional[str] = None
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    messages: List[Dict[str, Any]] = []
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
 
 class TableSchema(BaseModel):
     table_no: int
@@ -72,9 +105,14 @@ async def get_menu() -> List[Dict]:
     cursor = menu_collection.find({}, {"_id": 0})
     return await cursor.to_list(length=100)
 
+async def get_categories() -> List[Dict]:
+    """Retrieve all categories."""
+    cursor = categories_collection.find({}, {"_id": 0})
+    return await cursor.to_list(length=100)
+
 async def get_combos() -> List[Dict]:
-    """Retrieve all combos."""
-    cursor = combos_collection.find({}, {"_id": 0})
+    """Retrieve all active combos."""
+    cursor = combos_collection.find({"isActive": True}, {"_id": 0})
     return await cursor.to_list(length=100)
 
 async def check_table_availability(time_str: str, persons: int) -> Dict:
@@ -104,64 +142,88 @@ async def book_table(table_no: int, time_str: str) -> bool:
     )
     return result.modified_count > 0
 
-async def create_order(user_phone: str, address: str, bill_type: str, items: List[Dict], total_price: float, payment_method: str = "offline", pickup_time: str = "", dine_in_time: str = "") -> str:
-    """ Create a new order and update the user's history """
+async def create_order(user_phone: str, address: str, bill_type: str, items: List[Dict], total_price: float, call_successful: bool = False, upsell_successful: bool = False, customer_name: str = "Customer") -> str:
+    """ Create a new order via voice in the VoiceOrder table. Update user data."""
     import uuid
-    order_id = str(uuid.uuid4())[:8] # Simple short order id
+    order_id = str(uuid.uuid4())[:10]
     
-    # Format the requested frontend JSON view
-    frontend_view = {
-        "Combo id / order id - quantity": f"{order_id} - {len(items)} items",
-        "Phone no.": user_phone,
-        "Online Delivery : address": address if bill_type.lower() == "delivery" else "N/A",
-        "dinin-time/reservation etc": dine_in_time if bill_type.lower() == "dine-in" else "N/A",
-        "Pick-up": f"No delivery charge . Time: {pickup_time}" if bill_type.lower() == "pickup" else "N/A",
-        "Detail of restaurant": "Petpooja",
-        "Calculate total order bill": f"${total_price}",
-        "Payment method : online/offline": payment_method
-    }
+    now = datetime.utcnow()
     
+    # Exact VoiceOrder schema defined in prompt
     order = {
-        "order_id": order_id,
-        "user_phone": user_phone,
-        "time_placed": datetime.utcnow(),
-        "bill_type": bill_type,
+        "orderId": order_id,
+        "phoneNo": user_phone,
+        "customerName": customer_name,
+        "orderType": bill_type.lower(), # typically "delivery"
+        "address": address,
+        "time": now.isoformat(),
+        "status": "pending",
+        "kotStatus": "pending",
         "items": items,
-        "total_price": total_price,
-        "status": "placed",
-        "payment_method": payment_method,
-        "frontend_view": frontend_view
+        "totalPrice": total_price,
+        "callSuccessful": call_successful,
+        "upsellSuccessful": upsell_successful,
+        "createdAt": now,
+        "updatedAt": now
     }
+    
     await orders_collection.insert_one(order)
     
-    # Update or insert User
+    # Update User schema for basic history context
+    history_string = f"{order_id} - {len(items)}"
     await users_collection.update_one(
         {"phone": user_phone},
         {
-            "$set": {"address": address, "name": "Customer"},
-            "$push": {"history": {"order_id": order_id, "items": len(items), "amount": total_price}},
+            "$set": {
+                "address": address, 
+                "name": customer_name
+            },
+            "$push": {"history": history_string},
             "$inc": {"final_bill": total_price}
         },
         upsert=True
     )
     return order_id
+    
+async def update_order_status(order_id: str, updates: Dict[str, Any]) -> bool:
+    """Update order details like callSuccessful after completion."""
+    updates["updatedAt"] = datetime.utcnow()
+    result = await orders_collection.update_one(
+        {"orderId": order_id},
+        {"$set": updates}
+    )
+    return result.modified_count > 0
 
 async def cancel_order(order_id: str) -> Dict:
-    """Cancel an order only if it exists. (5 mins logic can be handled by the caller or AI agent context)"""
-    order = await orders_collection.find_one({"order_id": order_id})
+    """Cancel an order."""
+    order = await orders_collection.find_one({"orderId": order_id})
     if not order:
         return {"success": False, "message": "Order does not exist"}
-    
-    # Check 5 minutes rule
-    time_diff = datetime.utcnow() - order["time_placed"]
-    if time_diff.total_seconds() > 300: # 5 minutes
-        return {"success": False, "message": "Order cannot be cancelled after 5 minutes"}
-    
+        
     await orders_collection.update_one(
-        {"order_id": order_id},
-        {"$set": {"status": "cancelled"}}
+        {"orderId": order_id},
+        {"$set": {"status": "cancelled", "updatedAt": datetime.utcnow()}}
     )
     return {"success": True, "message": f"Order {order_id} cancelled successfully."}
 
 async def get_user_by_phone(phone: str) -> Optional[Dict]:
     return await users_collection.find_one({"phone": phone}, {"_id": 0})
+
+async def save_transcript(phone_no: str, order_id: Optional[str], messages_list: List[Dict[str, str]]) -> str:
+    """Save the chat history transcript after the call ends."""
+    import uuid
+    transcript_id = str(uuid.uuid4())[:12]
+    now = datetime.utcnow()
+    
+    transcript = {
+        "transcriptId": transcript_id,
+        "phoneNo": phone_no,
+        "orderId": order_id, # Can be null if no order placed
+        "timestamp": now,
+        "messages": messages_list,
+        "createdAt": now,
+        "updatedAt": now
+    }
+    await transcripts_collection.insert_one(transcript)
+    return transcript_id
+

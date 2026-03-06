@@ -26,3 +26,4 @@ orjson
 motor
 websockets
 langchain-groq
+python-multipart

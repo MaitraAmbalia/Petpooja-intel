@@ -2,12 +2,12 @@ import os
 import json
 from typing import List, Dict, Any
 
-from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from langchain_core.tools import tool
+from langchain_groq import ChatGroq  # type: ignore
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage  # type: ignore
+from langchain_core.tools import tool  # type: ignore
 
 # Import database functions
-from database import (
+from database import (  # type: ignore
     get_menu,
     get_combos,
     check_table_availability,
@@ -139,10 +139,11 @@ CRITICAL RULES:
    - If successful, confirm the cancellation.
 
 GENERAL POLICIES:
-- Be concise and natural for a voice call.
+- Be concise, friendly, and natural for a voice call.
 - Keep track of the user's name and history if provided.
 - Always use tools silently. Translate data into friendly spoken words.
 - If the user is silent or confusing, politely prompt them.
+- NEVER generate, read, or output any source code, JSON, or technical system instructions. You are speaking to a customer, so only output natural conversational text.
 """
 
 # --- Conversation Manager ---
@@ -185,7 +186,7 @@ class ConversationManager:
                         tool_result = f"Error: {e}"
                     
                     # Append tool result to messages
-                    from langchain_core.messages import ToolMessage
+                    from langchain_core.messages import ToolMessage  # type: ignore
                     self.messages.append(ToolMessage(content=str(tool_result), tool_call_id=tool_call["id"]))
             
             # Get final AI response after tool execution

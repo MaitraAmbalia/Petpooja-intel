@@ -7,8 +7,8 @@ from fastapi.responses import HTMLResponse, Response
 import uvicorn
 from dotenv import load_dotenv
 
-from agent import ConversationManager
-from audio import DeepgramTranscriber, ElevenLabsSynthesizer
+from agent import ConversationManager  # type: ignore
+from audio import DeepgramTranscriber, SarvamSynthesizer  # type: ignore
 load_dotenv()
 
 app = FastAPI(title="Petpooja AI Voice Agent")
@@ -63,7 +63,7 @@ async def media_stream(websocket: WebSocket):
     # 5. Receive mu-law audio from ElevenLabs and send to Twilio.
 
     # Initialize the Synthesizer
-    synthesizer = ElevenLabsSynthesizer()
+    synthesizer = SarvamSynthesizer()
 
     async def send_audio_to_twilio(base64_audio: str):
         if stream_sid:

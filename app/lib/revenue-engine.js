@@ -34,19 +34,25 @@ export const calculateMargin = (item) => {
 export const classifyMenuItems = (items, avgMargin, avgPopularity) => {
     return items.map(item => {
         const margin = calculateMargin(item);
+
+        // Calculate popularityScore from orderHistory if missing (using 3-day WMA)
+        const popularityScore = item.popularityScore !== undefined
+            ? item.popularityScore
+            : (item.orderHistory ? (item.orderHistory[0] * 0.5 + item.orderHistory[1] * 0.3 + item.orderHistory[2] * 0.2) : 0);
+
         let classification = "";
 
-        if (margin >= avgMargin && item.popularityScore >= avgPopularity) {
+        if (margin >= avgMargin && popularityScore >= avgPopularity) {
             classification = "Star";
-        } else if (margin < avgMargin && item.popularityScore >= avgPopularity) {
+        } else if (margin < avgMargin && popularityScore >= avgPopularity) {
             classification = "Workhorse";
-        } else if (margin >= avgMargin && item.popularityScore < avgPopularity) {
+        } else if (margin >= avgMargin && popularityScore < avgPopularity) {
             classification = "Challenge";
         } else {
             classification = "Dog";
         }
 
-        return { ...item, margin, classification };
+        return { ...item, margin, popularityScore, classification };
     });
 };
 
@@ -115,71 +121,103 @@ export const getPriceOptimization = (item) => {
 };
 
 /**
- * Strategic Combo Generation Logic
  * 
- * Implements the High/Low quadrant strategy:
- * - Combo 1: High Pop + High Margin (Star) - 5% discount
- * - Combo 2: High Pop + Low Margin (Workhorse) - 8% discount
- * - Combo 3: Low Pop + High Margin (Challenge) - 10% discount
+ * 
+ * 1. Calculates Weighted Moving Average (WMA) for popularity: (D1*0.5 + D2*0.3 + D3*0.2)
+ * 2. Normalizes Margin and WMA Popularity using Min-Max scaling.
+ * 3. Calculates a Performance Score: (Margin_norm + Orders_norm)
+ * 4. Generates 3 Strategic Bundles:
+ *    - Combo 1 (Star Performers): 3-item Trio (Snack + Bev + Dessert) - 5% Discount
+ *    - Combo 2 (Traffic Builders): Top 2 categories paired (Snack + Bev) - 8% Discount
+ *    - Combo 3 (Hidden Gems): Under-promoted high scorers (Snack + Bev) - 10% Discount
  */
 export const getStrategicCombos = (items) => {
-    // Separate by relevant categories for bundling
-    const snacks = items.filter(i => i.category === "Mains" || i.category === "Sides");
-    const beverages = items.filter(i => i.category === "Beverage");
-    const desserts = items.filter(i => i.category === "Desserts");
+    // 1. Calculate WMA for all items
+    const processedItems = items.map(item => {
+        const history = item.orderHistory || [0, 0, 0];
+        const wma = (history[0] * 0.5) + (history[1] * 0.3) + (history[2] * 0.2);
+        return { ...item, wma };
+    });
 
-    const getMedian = (arr, key) => {
-        const values = arr.map(i => i[key]).sort((a, b) => a - b);
-        const mid = Math.floor(values.length / 2);
-        return values.length % 2 !== 0 ? values[mid] : (values[mid - 1] + values[mid]) / 2;
+    // 2. Separate by Categories
+    const snacks = processedItems.filter(i => i.category === "Snack");
+    const beverages = processedItems.filter(i => i.category === "Beverage");
+    const desserts = processedItems.filter(i => i.category === "Dessert");
+
+    // 3. Normalization Helper (Min-Max)
+    const normalize = (arr, key) => {
+        const values = arr.map(i => i[key]);
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        if (max === min) return arr.map(i => ({ ...i, [`${key}_norm`]: 1 }));
+        return arr.map(i => ({
+            ...i,
+            [`${key}_norm`]: (i[key] - min) / (max - min)
+        }));
     };
 
-    const findItem = (pool, popType, marType) => {
-        if (pool.length === 0) return null;
-
-        const medPop = getMedian(pool, 'popularityScore');
-        const medMar = getMedian(pool, 'margin');
-
-        const popCond = (i) => popType === 'High' ? i.popularityScore >= medPop : i.popularityScore < medPop;
-        const marCond = (i) => marType === 'High' ? i.margin >= medMar : i.margin < medMar;
-
-        let candidates = pool.filter(i => popCond(i) && marCond(i));
-        if (candidates.length === 0) candidates = pool;
-
-        // Sort to pick best representative
-        return [...candidates].sort((a, b) => {
-            if (popType === 'High' && marType === 'High') return b.popularityScore - a.popularityScore || b.margin - a.margin;
-            if (popType === 'High' && marType === 'Low') return b.popularityScore - a.popularityScore || a.margin - b.margin;
-            if (popType === 'Low' && marType === 'High') return b.margin - a.margin || a.popularityScore - b.popularityScore;
-            return b.margin - a.margin;
-        })[0];
+    // Normalize each category separately to ensure fair ranking
+    const scoreItems = (pool) => {
+        if (pool.length === 0) return [];
+        let p = normalize(pool, 'margin');
+        p = normalize(p, 'wma');
+        return p.map(i => ({
+            ...i,
+            score: i.margin_norm + i.wma_norm
+        })).sort((a, b) => b.score - a.score);
     };
 
+    const scoredSnacks = scoreItems(snacks);
+    const scoredBeverages = scoreItems(beverages);
+    const scoredDesserts = scoreItems(desserts);
+
+    // 4. Bundling Logic
     const configs = [
-        { name: "Combo 1", strategy: "Star Performers", desc: "High Pop + High Margin", discount: 0.05, types: ['snack', 'beverage'], sType: 'High', mType: 'High' },
-        { name: "Combo 2", strategy: "Traffic Builders", desc: "High Pop + Low Margin", discount: 0.08, types: ['snack', 'beverage'], sType: 'High', mType: 'Low' },
-        { name: "Combo 3", strategy: "Hidden Gems", desc: "Low Pop + High Margin", discount: 0.10, types: ['snack', 'beverage'], sType: 'Low', mType: 'High' }
+        {
+            id: 'combo_1',
+            name: "Combo 1 (Star Performers)",
+            strategy: "High Pop + High Margin (WMA)",
+            discount: 0.05,
+            get: () => [scoredSnacks[0], scoredBeverages[0], scoredDesserts[0]]
+        },
+        {
+            id: 'combo_2',
+            name: "Combo 2 (Traffic Builders)",
+            strategy: "High Volume Staples",
+            discount: 0.08,
+            get: () => [scoredSnacks[1], scoredBeverages[1]]
+        },
+        {
+            id: 'combo_3',
+            name: "Combo 3 (Hidden Gems)",
+            strategy: "High Margin Potential",
+            discount: 0.10,
+            get: () => {
+                // Pick items with high margin but lower popularity (lower score index)
+                const s = scoredSnacks.find(i => i.wma_norm < 0.5) || scoredSnacks[scoredSnacks.length - 1];
+                const b = scoredBeverages.find(i => i.wma_norm < 0.5) || scoredBeverages[scoredBeverages.length - 1];
+                return [s, b];
+            }
+        }
     ];
 
     return configs.map(config => {
-        const snack = findItem(snacks, config.sType, config.mType);
-        const beverage = findItem(beverages, config.sType, config.mType);
+        const comboItems = config.get().filter(Boolean);
+        if (comboItems.length < 2) return null;
 
-        if (!snack || !beverage) return null;
-
-        const basePrice = snack.price + beverage.price;
-        const baseMargin = snack.margin + beverage.margin;
+        const basePrice = comboItems.reduce((acc, i) => acc + i.price, 0);
+        const baseMargin = comboItems.reduce((acc, i) => acc + i.margin, 0);
         const discountAmount = basePrice * config.discount;
 
         return {
-            id: `bundle_${config.name.toLowerCase().replace(' ', '_')}`,
-            name: `${config.name} (${config.strategy})`,
-            items: [snack, beverage],
-            strategy: config.desc,
+            id: config.id,
+            name: config.name,
+            items: comboItems,
+            strategy: config.strategy,
             discount: config.discount * 100,
-            basePrice: basePrice,
+            basePrice: Number(basePrice.toFixed(2)),
             discountedPrice: Number((basePrice - discountAmount).toFixed(2)),
-            originalMargin: baseMargin,
+            originalMargin: Number(baseMargin.toFixed(2)),
             newMargin: Number((baseMargin - discountAmount).toFixed(2)),
         };
     }).filter(Boolean);

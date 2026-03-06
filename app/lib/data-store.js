@@ -15,24 +15,18 @@ export const INITIAL_MENU = [
         foodCost: 4.50,
         margin: 7.50,
         opCost: 1.20,
-        category: "Mains",
+        category: "Snack",
         isVeg: false,
         dietType: "non-veg",
-        popularityScore: 85,
+        orderHistory: [85, 78, 92], // [D1, D2, D3]
         spiceLevel: 2,
         ingredients: [
             { name: "Bun", quantity: "1", unit: "pcs" },
             { name: "Beef Patty", quantity: "150", unit: "g" },
             { name: "Lettuce", quantity: "20", unit: "g" }
         ],
-        variants: [
-            { name: "Regular", price: 12.00 },
-            { name: "Double Patty", price: 16.00 }
-        ],
-        addons: [
-            { name: "Extra Cheese", price: 1.50 },
-            { name: "Bacon", price: 2.00 }
-        ]
+        variants: [{ name: "Regular", price: 12.00 }, { name: "Double Patty", price: 16.00 }],
+        addons: [{ name: "Extra Cheese", price: 1.50 }]
     },
     {
         foodId: "sku_102",
@@ -41,22 +35,14 @@ export const INITIAL_MENU = [
         foodCost: 1.50,
         margin: 5.00,
         opCost: 0.80,
-        category: "Sides",
+        category: "Snack",
         isVeg: true,
         dietType: "veg",
-        popularityScore: 92,
+        orderHistory: [92, 95, 88],
         spiceLevel: 1,
-        ingredients: [
-            { name: "Potato", quantity: "200", unit: "g" },
-            { name: "Truffle Oil", quantity: "5", unit: "ml" }
-        ],
-        variants: [
-            { name: "Small", price: 6.50 },
-            { name: "Large", price: 9.00 }
-        ],
-        addons: [
-            { name: "Truffle Mayo", price: 1.00 }
-        ]
+        ingredients: [{ name: "Potato", quantity: "200", unit: "g" }],
+        variants: [{ name: "Small", price: 6.50 }, { name: "Large", price: 9.00 }],
+        addons: []
     },
     {
         foodId: "sku_103",
@@ -65,90 +51,14 @@ export const INITIAL_MENU = [
         foodCost: 3.00,
         margin: 7.00,
         opCost: 1.00,
-        category: "Mains",
+        category: "Snack",
         isVeg: true,
         dietType: "veg",
-        popularityScore: 45,
+        orderHistory: [45, 52, 48],
         spiceLevel: 4,
-        ingredients: [
-            { name: "Tortilla", quantity: "1", unit: "pcs" },
-            { name: "Paneer", quantity: "100", unit: "g" },
-            { name: "Spicy Sauce", quantity: "30", unit: "ml" }
-        ],
-        variants: [
-            { name: "Standard", price: 10.00 }
-        ],
-        addons: [
-            { name: "Extra Paneer", price: 2.50 }
-        ]
-    },
-    {
-        foodId: "sku_104",
-        foodName: "Jain Dal Tadka",
-        price: 9.00,
-        foodCost: 2.50,
-        margin: 6.50,
-        opCost: 0.90,
-        category: "Mains",
-        isVeg: true,
-        dietType: "jain",
-        popularityScore: 35,
-        spiceLevel: 2,
-        ingredients: [
-            { name: "Lentils", quantity: "150", unit: "g" },
-            { name: "Ghee", quantity: "10", unit: "ml" }
-        ],
-        variants: [
-            { name: "Full", price: 9.00 },
-            { name: "Half", price: 5.50 }
-        ],
+        ingredients: [{ name: "Paneer", quantity: "100", unit: "g" }],
+        variants: [{ name: "Standard", price: 10.00 }],
         addons: []
-    },
-    {
-        foodId: "sku_108",
-        foodName: "Margherita Pizza",
-        price: 15.00,
-        foodCost: 4.00,
-        margin: 11.00,
-        opCost: 1.50,
-        category: "Mains",
-        isVeg: true,
-        dietType: "veg",
-        popularityScore: 88,
-        spiceLevel: 1,
-        ingredients: [
-            { name: "Dough", quantity: "200", unit: "g" },
-            { name: "Tomato Sauce", quantity: "50", unit: "ml" },
-            { name: "Mozzarella", quantity: "100", unit: "g" }
-        ],
-        variants: [
-            { name: "10-inch", price: 15.00 },
-            { name: "12-inch", price: 19.00 }
-        ],
-        addons: [
-            { name: "Extra Cheese", price: 2.00 },
-            { name: "Olive Topping", price: 1.00 }
-        ]
-    },
-    {
-        foodId: "sku_109",
-        foodName: "Tomato Cream Soup",
-        price: 5.50,
-        foodCost: 1.20,
-        margin: 4.30,
-        opCost: 0.50,
-        category: "Soup",
-        isVeg: true,
-        dietType: "veg",
-        popularityScore: 65,
-        spiceLevel: 1,
-        ingredients: [
-            { name: "Tomato", quantity: "150", unit: "g" },
-            { name: "Cream", quantity: "20", unit: "ml" },
-            { name: "Basil", quantity: "2", unit: "leaves" }
-        ],
-        variants: [{ name: "Standard", price: 5.50 }],
-        addons: [{ name: "Croutons", price: 0.50 }, { name: "Cheese", price: 1.00 }]
     },
     {
         foodId: "sku_110",
@@ -160,14 +70,10 @@ export const INITIAL_MENU = [
         category: "Beverage",
         isVeg: true,
         dietType: "veg",
-        popularityScore: 80,
+        orderHistory: [80, 85, 75],
         spiceLevel: 0,
-        ingredients: [
-            { name: "Lemon", quantity: "1", unit: "pcs" },
-            { name: "Soda", quantity: "200", unit: "ml" },
-            { name: "Sugar Syrup", quantity: "20", unit: "ml" }
-        ],
-        variants: [{ name: "Sweet", price: 4.00 }, { name: "Salted", price: 4.00 }],
+        ingredients: [{ name: "Lemon", quantity: "1", unit: "pcs" }],
+        variants: [{ name: "Sweet", price: 4.00 }],
         addons: []
     },
     {
@@ -180,25 +86,52 @@ export const INITIAL_MENU = [
         category: "Beverage",
         isVeg: true,
         dietType: "veg",
-        popularityScore: 90,
+        orderHistory: [90, 88, 95],
         spiceLevel: 0,
-        ingredients: [
-            { name: "Milk", quantity: "200", unit: "ml" },
-            { name: "Coffee Powder", quantity: "5", unit: "g" },
-            { name: "Chocolate Syrup", quantity: "10", unit: "ml" }
-        ],
-        variants: [{ name: "Regular", price: 6.00 }, { name: "With Ice Cream", price: 8.00 }],
-        addons: [{ name: "Chocolate Chips", price: 1.00 }]
+        ingredients: [{ name: "Milk", quantity: "200", unit: "ml" }],
+        variants: [{ name: "Regular", price: 6.00 }],
+        addons: []
     },
+    {
+        foodId: "sku_112",
+        foodName: "Choco Lava Cake",
+        price: 7.50,
+        foodCost: 2.00,
+        margin: 5.50,
+        opCost: 0.50,
+        category: "Dessert",
+        isVeg: true,
+        dietType: "veg",
+        orderHistory: [70, 65, 80],
+        spiceLevel: 0,
+        ingredients: [{ name: "Chocolate", quantity: "50", unit: "g" }],
+        variants: [{ name: "Standard", price: 7.50 }],
+        addons: []
+    },
+    {
+        foodId: "sku_113",
+        foodName: "Vanilla Sundae",
+        price: 5.00,
+        foodCost: 1.20,
+        margin: 3.80,
+        opCost: 0.40,
+        category: "Dessert",
+        isVeg: true,
+        dietType: "veg",
+        orderHistory: [55, 60, 50],
+        spiceLevel: 0,
+        ingredients: [{ name: "Vanilla Ice Cream", quantity: "100", unit: "g" }],
+        variants: [{ name: "Standard", price: 5.00 }],
+        addons: []
+    }
 ];
 
 export const CATEGORIES = [
     { id: "all", name: "All Items", icon: "LayoutGrid" },
-    { id: "mains", name: "Mains", icon: "Utensils" },
-    { id: "sides", name: "Sides", icon: "Soup" },
+    { id: "snack", name: "Snack", icon: "Utensils" },
     { id: "beverage", name: "Beverage", icon: "Coffee" },
-    { id: "soup", name: "Soup", icon: "Waves" },
-    { id: "desserts", name: "Desserts", icon: "IceCream" }
+    { id: "dessert", name: "Dessert", icon: "IceCream" },
+    { id: "combos", name: "Combos", icon: "ShoppingBag" }
 ];
 
 // Mock Restaurant Data

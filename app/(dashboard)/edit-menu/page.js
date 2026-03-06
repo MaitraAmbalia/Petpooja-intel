@@ -33,7 +33,8 @@ const iconMap = {
     Soup: SoupIcon,
     Coffee,
     Waves,
-    IceCream
+    IceCream,
+    ShoppingBag
 };
 
 const DietBadge = ({ type }) => {
@@ -375,6 +376,26 @@ export default function EditMenuPage() {
         CATEGORIES.reduce((acc, cat) => ({ ...acc, [cat.id]: true }), {})
     );
 
+    const handleActivateCombo = (combo) => {
+        const newComboItem = {
+            foodId: `combo_${Date.now()}`,
+            foodName: combo.name,
+            price: combo.discountedPrice,
+            foodCost: combo.items.reduce((acc, i) => acc + i.foodCost, 0),
+            margin: combo.newMargin,
+            category: "Combos", // New category for active combos
+            dietType: combo.items.some(i => i.dietType === 'non-veg') ? 'non-veg' : 'veg',
+            isVeg: !combo.items.some(i => i.dietType === 'non-veg'),
+            popularityScore: 100, // New combos start with high visibility
+            orderHistory: [0, 0, 0],
+            ingredients: combo.items.flatMap(i => i.ingredients),
+            variants: [{ name: "Standard", price: combo.discountedPrice }],
+            addons: combo.items.flatMap(i => i.addons)
+        };
+        setItems(prev => [newComboItem, ...prev]);
+        alert(`Strategic Bundle "${combo.name}" has been activated and added to your menu!`);
+    };
+
     const filteredItems = items.filter(item => {
         const matchesSearch = item.foodName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === "all" || item.category === catName(selectedCategory);
@@ -481,7 +502,7 @@ export default function EditMenuPage() {
                                     {combo.items.map((item, i) => (
                                         <div key={item.foodId} className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-lg">
-                                                {item.category === 'Beverage' ? '🥤' : '🍔'}
+                                                {item.category === 'Beverage' ? '🥤' : item.category === 'Dessert' ? '🍰' : '🍔'}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-slate-900">{item.foodName}</p>
@@ -505,7 +526,10 @@ export default function EditMenuPage() {
                                     </div>
                                 </div>
 
-                                <button className="w-full mt-4 py-3 bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm">
+                                <button
+                                    onClick={() => handleActivateCombo(combo)}
+                                    className="w-full mt-4 py-3 bg-slate-50 text-slate-400 group-hover:bg-slate-900 group-hover:text-white rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                                >
                                     Click to Activate Bundle
                                 </button>
                             </motion.div>

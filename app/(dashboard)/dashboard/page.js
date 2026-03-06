@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { REVENUE_HISTORY, INITIAL_MENU, TEAM_MEMBERS } from "@/lib/data-store";
+import { REVENUE_HISTORY, PROCESSED_MENU, TEAM_MEMBERS } from "@/lib/data-store";
 import { motion } from "framer-motion";
 import {
     DollarSign,
@@ -68,7 +68,7 @@ const MetricCard = ({ title, value, subValue, trend, icon: Icon, isActive, onCli
 );
 
 export default function DashboardPage() {
-    const sortedByPopularity = [...INITIAL_MENU].sort((a, b) => b.popularityScore - a.popularityScore);
+    const sortedByPopularity = [...PROCESSED_MENU].sort((a, b) => b.popularityScore - a.popularityScore);
     const bestSeller = sortedByPopularity[0];
     const worstSeller = sortedByPopularity[sortedByPopularity.length - 1];
 

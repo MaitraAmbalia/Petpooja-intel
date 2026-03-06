@@ -78,7 +78,7 @@ export default function MenuAnalyticsPage() {
                                                         <p className="text-xs font-semibold text-orange-500 uppercase">{data.classification}</p>
                                                         <div className="mt-2 text-sm text-slate-500">
                                                             <p>Margin: ${data.margin.toFixed(2)}</p>
-                                                            <p>Popularity: {data.popularityScore}</p>
+                                                            <p>Popularity: {data.popularityScore.toFixed(2)}</p>
                                                         </div>
                                                     </div>
                                                 );
@@ -190,13 +190,13 @@ export default function MenuAnalyticsPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="text-sm font-bold text-slate-700">{item.popularityScore}</span>
+                                            <span className="text-sm font-bold text-slate-700">{item.popularityScore.toFixed(2)}</span>
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl ${item.classification === "Star" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                                    item.classification === "Challenge" ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                                        item.classification === "Workhorse" ? "bg-blue-50 text-blue-600 border border-blue-100" :
-                                                            "bg-slate-50 text-slate-400 border border-slate-100"
+                                                item.classification === "Challenge" ? "bg-orange-50 text-orange-600 border border-orange-100" :
+                                                    item.classification === "Workhorse" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                                        "bg-slate-50 text-slate-400 border border-slate-100"
                                                 }`}>
                                                 {item.classification}
                                             </span>

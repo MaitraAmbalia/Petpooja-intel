@@ -144,7 +144,7 @@ export default function DashboardLayout({ children }) {
                                     transition={{ duration: 0.2 }}
                                     className={cn("font-extrabold text-lg tracking-tight whitespace-nowrap", isDarkMode ? "text-white" : "text-slate-900")}
                                 >
-                                    {isStaff ? "Kitchen" : "Restoboard"}
+                                    {isStaff ? "Kitchen" : "Petpooja-Copilot"}
                                 </motion.span>
                             )}
                         </AnimatePresence>
@@ -271,12 +271,10 @@ export default function DashboardLayout({ children }) {
                     </div>
 
                     <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-                        <div className={cn("p-1.5 rounded-lg shadow-lg", isStaff ? "bg-emerald-500 shadow-emerald-100" : "bg-orange-500 shadow-orange-100")}>
-                            <Store className="text-white w-4 h-4" />
+                        <div className="flex items-center gap-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Burger_King_2020.svg" alt="Burger King" className="w-8 h-8 object-contain" />
+                            <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">Burger King</span>
                         </div>
-                        <span className={cn("font-black tracking-tight text-lg", isDarkMode ? "text-white" : "text-slate-900")}>
-                            {session.user.name || "My Restaurant"}
-                        </span>
                     </div>
 
                     <div className="flex items-center gap-2">

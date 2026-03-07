@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "../../lib/mongodb";
-import Transcript from "../../models/Transcript";
+import connectDB, { connectVoiceDB } from "../../lib/mongodb";
+import { getTranscriptModel } from "../../models/Transcript";
 
 export async function GET(req: NextRequest) {
     try {
         await connectDB();
+        const voiceDb = await connectVoiceDB();
+        const Transcript = getTranscriptModel(voiceDb);
         const url = new URL(req.url);
         const orderId = url.searchParams.get("orderId");
         const phoneNo = url.searchParams.get("phoneNo");

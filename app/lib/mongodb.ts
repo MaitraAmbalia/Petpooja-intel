@@ -41,5 +41,14 @@ async function connectDB(): Promise<typeof mongoose> {
 
     return cached.conn;
 }
+let voiceConn: mongoose.Connection | null = null;
+
+export async function connectVoiceDB(): Promise<mongoose.Connection> {
+    const mainMongoose = await connectDB();
+    if (!voiceConn) {
+        voiceConn = mainMongoose.connection.useDb("petpooja_db", { useCache: true });
+    }
+    return voiceConn;
+}
 
 export default connectDB;

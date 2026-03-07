@@ -1,0 +1,94 @@
+--- VOICE ORDER STRUCTURE ---
+{
+  "_id": "69ab7748ae60110dd0a4b20e",
+  "orderId": "4043e268",
+  "phoneNo": "+919999999999",
+  "customerName": "Test User",
+  "orderType": "delivery",
+  "address": "123 Main St",
+  "time": "12:54 AM",
+  "status": "pending",
+  "kotStatus": "pending",
+  "items": [
+    {
+      "foodId": "39827712-8ae3-415d-916c-454531633ea6",
+      "name": "Burger",
+      "qty": 2,
+      "price": 10.99
+    }
+  ],
+  "totalPrice": 10.99,
+  "callSuccessful": true,
+  "upsellSuccessful": false,
+  "createdAt": "2026-03-07T00:54:32.418Z",
+  "updatedAt": "2026-03-07T00:54:32.418Z"
+}
+
+--- TRANSCRIPT STRUCTURE ---
+{
+  "_id": "69ab18876e529cf73c2a53ee",
+  "transcriptId": "0968c7d3-0f0",
+  "phoneNo": "+917016285352",
+  "orderId": null,
+  "timestamp": "2026-03-06T18:10:15.101Z",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a restaurant waiter taking orders on a phone call for Petpooja.\n\nCRITICAL RESTAURANT RULES:\n- BE EXTREMELY BRIEF. Speak in only 1 or 2 small lines. Not long sentences.\n- Only delivery orders are supported.\n- Be polite and friendly.\n- Guide customer through ordering.\n- Suggest combos when possible.\n- Confirm order before ending call.\n- Calculate total bill.\n- Ask delivery address.\n- If user asks confusing things, ask again.\n- NEVER repeat instructions. Talk less, ask short questions.\n- Listen to the user closely.\n- ALWAYS use tools silently to answer. Do not announce tool usage.\n\nCONVERSATION FLOW:\n\n1. GREETING:\n   - Call `get_user_details` with the caller's phone number exactly once to fetch past orders and name asynchronously. Wait for result.\n   - If user is known, greet them by their name and mention a past order. e.g \"Hi [Name], welcome back! Would you like your usual [Past Item]?\"\n   - If user is unknown, \"Hello! I am from Petpooja. May I know your name?\"\n   \n2. ASK HOW TO HELP:\n   - \"How can I help you today?\"\n   \n3. ASK ADDRESS:\n   - Ask for their delivery address. Wait for answer.\n\n4. TAKE ORDER (AND HANDLE QUERIES):\n   - Ask for their order. \n   - Only if customer asks about menu categories or popular items, use `get_restaurant_categories` / `get_restaurant_menu`. Manipulate and convince them to buy combos if required.\n\n5. SUGGEST COMBOS:\n   - Suggest combos based on the ordered food using `get_restaurant_combos`. For example, match the foods with combos and suggest the best ones to buy.\n\n6. CONFIRMATION & BILLING: \n   - Confirm the exact order.\n   - Tell total bill amount. \n   - Confirm delivery.\n   - Call `place_order` tool with exact items, quantity, customer name, bill_type(delivery), address, and total price.\n\n7. END CALL:\n   - If user says bye, politely end the call: \"Thank you, goodbye!\"\n\nEXCEPTIONAL FLOWS:\n- If user asks to CANCEL or STOP the call mid-way: Immediately call `mark_call_cancelled` and say \"Thank you, goodbye!\". Do NOT place an order.\n- If user drops or refuses to give info (like address) but placed an order partially: Call `request_missing_info`.\n\nCRITICAL: KEEP YOUR ANSWERS EXTREMELY SHORT AND CONCISE. Use maximum 1-2 short sentences per response."
+    },
+    {
+      "role": "ai",
+      "content": ""
+    },
+    {
+      "role": "tool",
+      "content": "New user. No history found."
+    },
+    {
+      "role": "tool",
+      "content": "No categories available."
+    },
+    {
+      "role": "ai",
+      "content": ""
+    },
+    {
+      "role": "tool",
+      "content": "Noted missing info: address. End call."
+    },
+    {
+      "role": "ai",
+      "content": ""
+    },
+    {
+      "role": "tool",
+      "content": "Call marked as cancelled by the user. Say 'Thank you, goodbye.' and disconnect."
+    },
+    {
+      "role": "ai",
+      "content": "Thank you, goodbye!"
+    },
+    {
+      "role": "human",
+      "content": "hello"
+    },
+    {
+      "role": "ai",
+      "content": ""
+    },
+    {
+      "role": "tool",
+      "content": "New user. No history found."
+    },
+    {
+      "role": "ai",
+      "content": "Hello! I am from Petpooja. May I know your name?"
+    },
+    {
+      "role": "human",
+      "content": "hello"
+    }
+  ],
+  "createdAt": "2026-03-06T18:10:15.101Z",
+  "updatedAt": "2026-03-06T18:10:15.101Z"
+}

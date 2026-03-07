@@ -42,5 +42,6 @@ const VoiceOrderSchema = new Schema<IVoiceOrder>({
     upsellSuccessful: { type: Boolean, default: false }
 }, { timestamps: true });
 
-const VoiceOrder = mongoose.models.VoiceOrder || mongoose.model<IVoiceOrder>("VoiceOrder", VoiceOrderSchema);
-export default VoiceOrder;
+export const getVoiceOrderModel = (connection: mongoose.Connection): mongoose.Model<IVoiceOrder> => {
+    return connection.models.VoiceOrder || connection.model<IVoiceOrder>("VoiceOrder", VoiceOrderSchema, "VoiceOrder");
+};

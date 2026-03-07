@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "../../lib/mongodb";
-import VoiceOrder from "../../models/VoiceOrder";
-import Transcript from "../../models/Transcript";
+import connectDB, { connectVoiceDB } from "../../lib/mongodb";
+import { getVoiceOrderModel } from "../../models/VoiceOrder";
+import { getTranscriptModel } from "../../models/Transcript";
 
 export async function GET(req: NextRequest) {
     try {
         await connectDB();
+        const voiceDb = await connectVoiceDB();
+        const VoiceOrder = getVoiceOrderModel(voiceDb);
+        const Transcript = getTranscriptModel(voiceDb);
         const url = new URL(req.url);
         const status = url.searchParams.get("status");
         const limit = parseInt(url.searchParams.get("limit") || "50");

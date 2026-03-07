@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "../../lib/mongodb";
-import VoiceOrder from "../../models/VoiceOrder";
+import connectDB, { connectVoiceDB } from "../../lib/mongodb";
+import { getVoiceOrderModel } from "../../models/VoiceOrder";
 import FoodItem from "../../models/FoodItem";
 import KOT from "../../models/KOT";
 
@@ -13,6 +13,8 @@ const STATION_PREP: Record<string, number> = { Grill: 8, Drinks: 3, Dessert: 5 }
 // ─── Auto-generate KOTs from new VoiceOrders ────────────────────
 async function syncKOTs() {
     // Find successful orders that don't have KOTs yet
+    const voiceDb = await connectVoiceDB();
+    const VoiceOrder = getVoiceOrderModel(voiceDb);
     const orders = await VoiceOrder.find({ callSuccessful: true }).lean() as any[];
     const existingOrderIds = new Set(
         (await KOT.distinct("orderId")).map((id: string) => id)
@@ -133,6 +135,8 @@ export async function PUT(req: NextRequest) {
             const siblings = await KOT.find({ orderId: kot.orderId });
             const allDone = siblings.every((k: any) => k.status === "completed");
             if (allDone) {
+                const voiceDb = await connectVoiceDB();
+                const VoiceOrder = getVoiceOrderModel(voiceDb);
                 await VoiceOrder.findOneAndUpdate(
                     { orderId: kot.orderId },
                     { kotStatus: "ready", status: "complete" }

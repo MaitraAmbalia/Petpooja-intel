@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
+import connectDB, { connectVoiceDB } from "@/lib/mongodb";
 import FoodItem from "@/models/FoodItem";
-import VoiceOrder from "@/models/VoiceOrder";
+import { getVoiceOrderModel } from "@/models/VoiceOrder";
 import ProductAnalytics from "@/models/ProductAnalytics";
 
 /**
@@ -19,6 +19,8 @@ import ProductAnalytics from "@/models/ProductAnalytics";
 export async function POST() {
     try {
         await connectDB();
+        const voiceDb = await connectVoiceDB();
+        const VoiceOrder = getVoiceOrderModel(voiceDb);
 
         // 1. Fetch all menu items
         const foodItems = await FoodItem.find().lean();

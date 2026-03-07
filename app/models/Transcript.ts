@@ -6,8 +6,8 @@ export interface ITranscript extends Document {
     orderId?: string; // Optional if no order was actually placed
     timestamp: Date;
     messages: {
-        role: "user" | "ai";
-        text: string;
+        role: "system" | "user" | "ai" | "tool" | "human";
+        content: string;
     }[];
 }
 
@@ -17,10 +17,11 @@ const TranscriptSchema = new Schema<ITranscript>({
     orderId: { type: String },
     timestamp: { type: Date, default: Date.now },
     messages: [{
-        role: { type: String, enum: ["user", "ai"], required: true },
-        text: { type: String, required: true }
+        role: { type: String, enum: ["system", "user", "ai", "tool", "human"], required: true },
+        content: { type: String, required: true }
     }]
 }, { timestamps: true });
 
-const Transcript = mongoose.models.Transcript || mongoose.model<ITranscript>("Transcript", TranscriptSchema);
-export default Transcript;
+export const getTranscriptModel = (connection: mongoose.Connection): mongoose.Model<ITranscript> => {
+    return connection.models.Transcript || connection.model<ITranscript>("Transcript", TranscriptSchema, "Transcript");
+};

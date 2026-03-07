@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { REVENUE_HISTORY, PROCESSED_MENU, TEAM_MEMBERS } from "@/lib/data-store";
+import { TEAM_MEMBERS } from "@/lib/data-store";
 import { motion } from "framer-motion";
 import {
     DollarSign,
@@ -15,7 +15,8 @@ import {
     TrendingUp,
     Activity,
     Package,
-    Sparkles
+    Sparkles,
+    Loader2
 } from "lucide-react";
 import {
     AreaChart,
@@ -40,25 +41,25 @@ const MetricCard = ({ title, value, subValue, trend, icon: Icon, isActive, onCli
         onClick={onClick}
         className={cn(
             "border-none shadow-sm p-5 rounded-2xl flex-1 cursor-pointer transition-all duration-300",
-            isActive ? "bg-orange-500 text-white ring-4 ring-orange-50" : "bg-white hover:bg-slate-50 border border-transparent hover:border-slate-100"
+            isActive ? "bg-orange-500 text-white ring-4 ring-orange-50" : "bg-white hover:bg-slate-50 border border-transparent hover:border-slate-100 dark:bg-slate-900 dark:border-slate-800"
         )}
     >
         <div className="flex justify-between items-center mb-1">
-            <h4 className={cn("text-2xl font-bold tracking-tight", isActive ? "text-white" : "text-slate-900")}>
+            <h4 className={cn("text-2xl font-bold tracking-tight", isActive ? "text-white" : "text-slate-900 dark:text-white")}>
                 {typeof value === 'number' ? value.toFixed(2) : value}
             </h4>
-            <div className={cn("p-2 rounded-xl", isActive ? "bg-white/20" : "bg-slate-50")}>
+            <div className={cn("p-2 rounded-xl", isActive ? "bg-white/20" : "bg-slate-50 dark:bg-slate-800")}>
                 <Icon className={isActive ? "text-white" : "text-slate-400"} size={18} />
             </div>
         </div>
         <p className={cn("text-xs font-semibold uppercase tracking-wider", isActive ? "text-white/80" : "text-slate-400")}>{title}</p>
         <div className="flex items-center gap-1.5 mt-4">
             {trend > 0 ? (
-                <div className={cn("flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-lg", isActive ? "text-white bg-white/20" : "text-emerald-600 bg-emerald-50")}>
+                <div className={cn("flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-lg", isActive ? "text-white bg-white/20" : "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30")}>
                     <ArrowUpRight size={12} /> {trend.toFixed(2)}%
                 </div>
             ) : (
-                <div className={cn("flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-lg", isActive ? "text-white bg-white/20" : "text-red-600 bg-red-50")}>
+                <div className={cn("flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded-lg", isActive ? "text-white bg-white/20" : "text-red-600 bg-red-50 dark:bg-rose-900/30")}>
                     <ArrowDownRight size={12} /> {Math.abs(trend).toFixed(2)}%
                 </div>
             )}
@@ -68,21 +69,83 @@ const MetricCard = ({ title, value, subValue, trend, icon: Icon, isActive, onCli
 );
 
 export default function DashboardPage() {
-    // Exclude Add-ons from performer rankings — they inflate due to order frequency but aren't standalone dishes
-    const mainMenuItems = PROCESSED_MENU.filter(item => item.category !== "Add-on");
-    const sortedByPopularity = [...mainMenuItems].sort((a, b) => b.popularityScore - a.popularityScore);
-    const bestSeller = sortedByPopularity[0];
-    const worstSeller = sortedByPopularity[sortedByPopularity.length - 1];
-
-    const todayProfit = 1245.80;
-    const todayOrders = 142;
-
+    const [analytics, setAnalytics] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [activeMetric, setActiveMetric] = useState('all');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch("/api/analytics/menu");
+                if (!res.ok) throw new Error("Failed to fetch");
+                const json = await res.json();
+                if (json.success) setAnalytics(json.data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const toggleMetric = (metric) => {
         if (activeMetric === metric) setActiveMetric('all');
         else setActiveMetric(metric);
     };
+
+    if (loading) return (
+        <DashboardLayout>
+            <div className="h-[400px] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+            </div>
+        </DashboardLayout>
+    );
+
+    // Derived dynamic data
+    const sortedByPopularity = [...analytics].sort((a, b) => b.popularityScore - a.popularityScore);
+    const bestSeller = sortedByPopularity.length > 0 ? sortedByPopularity[0] : null;
+    const worstSeller = sortedByPopularity.length > 0 ? sortedByPopularity[sortedByPopularity.length - 1] : null;
+
+    // Build timeline for charts using real dailyHistory
+    // Aggregate across all items for each date
+    const dateMap = {};
+    analytics.forEach(item => {
+        if (item.dailyHistory) {
+            item.dailyHistory.forEach(day => {
+                if (!dateMap[day.date]) {
+                    dateMap[day.date] = { date: day.date, revenue: 0, profit: 0, costs: 0, orders: 0 };
+                }
+                const dayProfit = (item.currentPrice - item.cost) * day.qty;
+                const dayCost = item.cost * day.qty;
+
+                dateMap[day.date].revenue += day.revenue;
+                dateMap[day.date].profit += dayProfit;
+                dateMap[day.date].costs += dayCost;
+                dateMap[day.date].orders += day.orders;
+            });
+        }
+    });
+
+    const timelineData = Object.values(dateMap).sort((a, b) => new Date(a.date) - new Date(b.date));
+    const recent7Days = timelineData.slice(-7);
+    const prev7Days = timelineData.slice(-14, -7);
+
+    const weekRevenue = recent7Days.reduce((a, b) => a + b.revenue, 0);
+    const prevWeekRevenue = prev7Days.reduce((a, b) => a + b.revenue, 0);
+    const revTrend = prevWeekRevenue > 0 ? ((weekRevenue - prevWeekRevenue) / prevWeekRevenue) * 100 : 0;
+
+    const weekProfit = recent7Days.reduce((a, b) => a + b.profit, 0);
+    const prevWeekProfit = prev7Days.reduce((a, b) => a + b.profit, 0);
+    const profitTrend = prevWeekProfit > 0 ? ((weekProfit - prevWeekProfit) / prevWeekProfit) * 100 : 0;
+
+    const weekCosts = recent7Days.reduce((a, b) => a + b.costs, 0);
+    const prevWeekCosts = prev7Days.reduce((a, b) => a + b.costs, 0);
+    const costTrend = prevWeekCosts > 0 ? ((weekCosts - prevWeekCosts) / prevWeekCosts) * 100 : 0;
+
+    const todayData = timelineData[timelineData.length - 1] || { profit: 0, orders: 0 };
+    const todayProfit = todayData.profit;
+    const todayOrders = todayData.orders;
 
     return (
         <DashboardLayout>
@@ -121,8 +184,8 @@ export default function DashboardPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <MetricCard
                                 title="Revenue"
-                                value="₹89,935.00"
-                                trend={1.01}
+                                value={`₹${weekRevenue.toFixed(2)}`}
+                                trend={revTrend}
                                 subValue="this week"
                                 icon={DollarSign}
                                 isActive={activeMetric === 'revenue'}
@@ -130,8 +193,8 @@ export default function DashboardPage() {
                             />
                             <MetricCard
                                 title="Net Profit"
-                                value="₹24,360.00"
-                                trend={2.40}
+                                value={`₹${weekProfit.toFixed(2)}`}
+                                trend={profitTrend}
                                 subValue="this week"
                                 icon={TrendingUp}
                                 isActive={activeMetric === 'profit'}
@@ -139,8 +202,8 @@ export default function DashboardPage() {
                             />
                             <MetricCard
                                 title="Operating Cost"
-                                value="₹65,575.00"
-                                trend={-0.92}
+                                value={`₹${weekCosts.toFixed(2)}`}
+                                trend={costTrend}
                                 subValue="this week"
                                 icon={Activity}
                                 isActive={activeMetric === 'costs'}
@@ -179,7 +242,7 @@ export default function DashboardPage() {
 
                             <div className="h-[350px] w-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={REVENUE_HISTORY}>
+                                    <AreaChart data={recent7Days}>
                                         <defs>
                                             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="#f97316" stopOpacity={0.08} />
@@ -234,40 +297,6 @@ export default function DashboardPage() {
                             </div>
                         </Card>
 
-                        {/* Order Volume */}
-                        <Card className="border-none shadow-sm rounded-3xl p-8 bg-white overflow-hidden">
-                            <div className="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 className="font-bold text-slate-900 text-lg">Order Volume</h3>
-                                    <p className="text-xs text-slate-400 font-medium mt-1">Transaction frequency analysis</p>
-                                </div>
-                                <Badge className="bg-orange-50 text-orange-600 border-none px-3 py-1 font-bold text-xs uppercase tracking-wide">Live</Badge>
-                            </div>
-                            <div className="h-[140px] w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={REVENUE_HISTORY}>
-                                        <XAxis
-                                            dataKey="date"
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
-                                            dy={10}
-                                        />
-                                        <YAxis
-                                            axisLine={false}
-                                            tickLine={false}
-                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
-                                            dx={-10}
-                                        />
-                                        <Tooltip
-                                            cursor={{ fill: '#f8fafc' }}
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                        />
-                                        <Bar dataKey="orders" fill="#f97316" radius={[4, 4, 0, 0]} barSize={24} />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </Card>
                     </div>
 
                     {/* Rights Column - Insights */}
@@ -281,21 +310,21 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <div className="p-2 bg-slate-50 dark:bg-white/10 rounded-xl transition-colors">
-                                        <TrendingUp size={16} className="text-emerald-500 dark:text-emerald-400 text-emerald-400" />
+                                        <TrendingUp size={16} className="text-emerald-500 dark:text-emerald-400" />
                                     </div>
                                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
                                 </div>
                             </Card>
-                            <Card className="border-none shadow-sm rounded-3xl p-6 bg-white border border-slate-50 h-36 flex flex-col justify-between">
+                            <Card className="border-none shadow-sm rounded-3xl p-6 bg-white dark:bg-slate-900 border border-slate-50 dark:border-slate-800 h-36 flex flex-col justify-between">
                                 <div>
                                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Today's Orders</p>
-                                    <h4 className="text-2xl font-bold tracking-tight text-slate-900">{todayOrders}</h4>
+                                    <h4 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{todayOrders}</h4>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <div className="p-2 bg-orange-50 rounded-xl">
+                                    <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-xl">
                                         <Package size={16} className="text-orange-500" />
                                     </div>
-                                    <Badge variant="outline" className="text-[10px] uppercase font-bold text-orange-500 border-orange-100">Live</Badge>
+                                    <Badge variant="outline" className="text-[10px] uppercase font-bold text-orange-500 border-orange-100 dark:border-orange-900/50">Live</Badge>
                                 </div>
                             </Card>
                         </div>
@@ -308,74 +337,77 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">Best Performer</p>
-                                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🔥</div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{bestSeller.name}</p>
-                                                <p className="text-xs text-slate-500 font-medium mt-1">Pop: {bestSeller.popularityScore.toFixed(2)}</p>
+                                {bestSeller && (
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 uppercase tracking-widest">Best Performer</p>
+                                        <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🔥</div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold truncate leading-tight tracking-tight">{bestSeller.name}</p>
+                                                    <p className="text-xs text-slate-500 font-medium mt-1">Pop: {bestSeller.popularityScore?.toFixed(2) || 0}</p>
+                                                </div>
                                             </div>
+                                            <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                         </div>
-                                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                     </div>
-                                </div>
+                                )}
 
-                                <div className="h-px bg-slate-100 dark:bg-white/5 w-full transition-colors" />
+                                {bestSeller && worstSeller && (
+                                    <div className="h-px bg-slate-100 dark:bg-white/5 w-full transition-colors" />
+                                )}
 
-                                <div className="space-y-3">
-                                    <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Least Performer</p>
-                                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between opacity-80 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🧊</div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{worstSeller.name}</p>
-                                                <p className="text-xs text-slate-500 font-medium mt-1">Pop: {worstSeller.popularityScore.toFixed(2)}</p>
+                                {worstSeller && (
+                                    <div className="space-y-3">
+                                        <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Least Performer</p>
+                                        <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex items-center justify-between opacity-80 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🧊</div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-semibold truncate leading-tight tracking-tight">{worstSeller.name}</p>
+                                                    <p className="text-xs text-slate-500 font-medium mt-1">Pop: {worstSeller.popularityScore?.toFixed(2) || 0}</p>
+                                                </div>
                                             </div>
+                                            <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                         </div>
-                                        <ChevronRight size={14} className="text-slate-400 dark:text-slate-700" />
                                     </div>
-                                </div>
+                                )}
                             </div>
                         </Card>
 
-                        {/* Team Tracker */}
-                        <Card className="border-none shadow-sm rounded-3xl p-7 bg-white">
+                        {/* Order Volume */}
+                        <Card className="border-none shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] rounded-3xl p-7 bg-white dark:bg-[#0f172a] overflow-hidden transition-colors">
                             <div className="flex justify-between items-center mb-8">
-                                <h3 className="font-bold text-slate-900 tracking-tight text-base">Team Snapshot</h3>
-                                <Badge className="bg-slate-50 text-slate-400 border-none text-[10px] font-bold uppercase tracking-widest">Active</Badge>
+                                <div>
+                                    <h3 className="font-bold text-slate-900 dark:text-white text-base">Order Volume</h3>
+                                    <p className="text-xs text-slate-400 font-medium mt-1">Transaction frequency analysis</p>
+                                </div>
+                                <Badge className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border-none px-3 py-1 font-bold text-[10px] uppercase tracking-wide transition-colors">Live</Badge>
                             </div>
-                            <div className="space-y-5">
-                                {TEAM_MEMBERS.slice(0, 5).map((member) => (
-                                    <div key={member.id} className="flex items-center justify-between group">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <Avatar className="w-10 h-10 ring-2 ring-slate-50">
-                                                    <AvatarImage src={member.image} />
-                                                    <AvatarFallback className="text-xs font-bold"> {member.name[0]} </AvatarFallback>
-                                                </Avatar>
-                                                <div className={cn(
-                                                    "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white",
-                                                    member.status === "Present" ? "bg-emerald-500" : "bg-red-400"
-                                                )} />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-semibold text-slate-900 truncate tracking-tight mb-1">{member.name}</p>
-                                                <p className="text-xs text-slate-400 font-medium uppercase tracking-tight">{member.role}</p>
-                                            </div>
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="text-slate-200 group-hover:text-slate-900 transition-colors">
-                                            <ChevronRight size={18} />
-                                        </Button>
-                                    </div>
-                                ))}
-                                <Button
-                                    variant="outline"
-                                    className="w-full h-11 rounded-2xl border-slate-100 text-xs font-bold text-slate-500 hover:text-orange-500 transition-all uppercase tracking-widest mt-2"
-                                >
-                                    Roster Detail
-                                </Button>
+                            <div className="h-[140px] w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={recent7Days}>
+                                        <XAxis
+                                            dataKey="date"
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
+                                            dy={10}
+                                        />
+                                        <YAxis
+                                            axisLine={false}
+                                            tickLine={false}
+                                            tick={{ fontSize: 10, fontWeight: 500, fill: '#64748b' }}
+                                            width={30}
+                                            dx={-10}
+                                        />
+                                        <Tooltip
+                                            cursor={{ fill: '#f8fafc' }}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                        <Bar dataKey="orders" fill="#f97316" radius={[4, 4, 0, 0]} barSize={16} />
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </div>
                         </Card>
                     </div>

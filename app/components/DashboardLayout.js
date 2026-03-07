@@ -38,7 +38,6 @@ const ADMIN_SIDEBAR = [
     { name: "Kitchen", icon: ChefHat, path: "/kitchen" },
     { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
     { name: "Unit Analysis", icon: Activity, path: "/unit-analysis" },
-    { name: "Teams", icon: UserCircle, path: "/teams" },
 ];
 
 const STAFF_SIDEBAR = [

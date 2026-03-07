@@ -1,29 +1,27 @@
 const mongoose = require('mongoose');
-const fs = require('fs');
 
-const uri = "mongodb+srv://dhruvlakhani0904_db_user:BJAYG5kYwYkwJdYP@cluster0.ucyzqis.mongodb.net/petpooja_db?appName=Cluster0";
+async function clean() {
+    const mainMongoose = await mongoose.connect('mongodb+srv://dhruvlakhani0904_db_user:BJAYG5kYwYkwJdYP@cluster0.ucyzqis.mongodb.net/?appName=Cluster0');
 
-async function verify() {
-    try {
-        await mongoose.connect(uri);
-        const db = mongoose.connection.useDb('petpooja_db');
+    // Mark all KOTs older than 1 hour as completed
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
-        let output = "";
-        const voiceOrderColl = db.collection('VoiceOrder');
-        const vo = await voiceOrderColl.findOne({});
-        output += "--- VOICE ORDER STRUCTURE ---\n";
-        output += JSON.stringify(vo, null, 2) + "\n\n";
+    const result = await mainMongoose.connection.db.collection('kots').updateMany(
+        { createdAt: { $lt: oneHourAgo } },
+        {
+            $set: {
+                status: 'completed',
+                'items.$[elem].status': 'ready',
+                completedAt: new Date()
+            }
+        },
+        {
+            arrayFilters: [{ "elem.status": { $ne: "ready" } }]
+        }
+    );
 
-        const transcriptColl = db.collection('Transcript');
-        const tr = await transcriptColl.findOne({});
-        output += "--- TRANSCRIPT STRUCTURE ---\n";
-        output += JSON.stringify(tr, null, 2) + "\n";
-
-        fs.writeFileSync('db_out_clean.txt', output, 'utf8');
-        mongoose.connection.close();
-    } catch (e) {
-        console.error(e);
-    }
+    console.log(`Marked ${result.modifiedCount} old KOTs as completed.`);
+    process.exit(0);
 }
 
-verify();
+clean().catch(console.error);

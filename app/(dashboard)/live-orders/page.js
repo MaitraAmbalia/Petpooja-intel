@@ -46,12 +46,20 @@ function mapOrderToUI(dbOrder) {
     const kotStatus = kotMap[dbOrder.kotStatus?.toLowerCase()] || "NONE";
 
     // Build transcript text from messages
-    const transcriptMessages = dbOrder.transcript?.messages || [];
-    const customerMessages = transcriptMessages.filter(m => m.role === "user").map(m => m.text);
+    const transcriptMessages = (dbOrder.transcript?.messages || [])
+        .filter(m => m.text && m.text.trim() !== ""); // Filter out blank messages
+
+    // Map 'speaker' and 'text' back to UI format
+    const uiMessages = transcriptMessages.map(m => ({
+        role: m.speaker === "agent" ? "ai" : m.speaker, // Map 'agent' to 'ai'
+        text: m.text
+    }));
+
+    const customerMessages = uiMessages.filter(m => m.role === "human" || m.role === "user").map(m => m.text);
     const transcriptText = customerMessages.join(" | ") || "No transcript available";
 
     // AI upsell detection from transcript
-    const aiMessages = transcriptMessages.filter(m => m.role === "ai");
+    const aiMessages = uiMessages.filter(m => m.role === "ai");
     const upsellMsg = aiMessages.find(m =>
         m.text.toLowerCase().includes("would you like") ||
         m.text.toLowerCase().includes("combo") ||
@@ -70,6 +78,7 @@ function mapOrderToUI(dbOrder) {
         invoiceNo: `INV-${createdAt.getFullYear()}-${String(dbOrder.orderId?.slice(-3) || "000").padStart(3, "0")}`,
         transcript: transcriptText,
         transcriptMessages: transcriptMessages,
+        uiMessages: uiMessages,
         structuredJson: {
             items: (dbOrder.items || []).map(i => ({
                 name: i.name,
@@ -331,8 +340,8 @@ export default function LiveOrdersPage() {
                                                 <MessageSquare size={14} /> Voice-to-Text Transcript
                                             </h4>
                                             <div className="space-y-6">
-                                                {selectedOrder.transcriptMessages && selectedOrder.transcriptMessages.length > 0 ? (
-                                                    selectedOrder.transcriptMessages.map((msg, idx) => (
+                                                {selectedOrder.uiMessages && selectedOrder.uiMessages.length > 0 ? (
+                                                    selectedOrder.uiMessages.map((msg, idx) => (
                                                         <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
                                                             <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black ${msg.role === "ai"
                                                                 ? "bg-orange-100 text-orange-600"
@@ -348,7 +357,7 @@ export default function LiveOrdersPage() {
                                                                     ? "text-orange-900"
                                                                     : "text-slate-700 italic"
                                                                     }`}>
-                                                                    {msg.role === "user" ? `"${msg.text}"` : msg.text}
+                                                                    {msg.role === "human" || msg.role === "user" ? `"${msg.text}"` : msg.text}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -367,13 +376,32 @@ export default function LiveOrdersPage() {
                                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                                                 <FileJson size={14} /> Order Payload (JSON)
                                             </h4>
-                                            <div className="bg-slate-900 p-6 rounded-2xl shadow-inner relative group">
-                                                <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-50 transition-opacity">
-                                                    <Terminal size={14} className="text-white" />
-                                                </div>
-                                                <pre className="text-[11px] font-mono text-emerald-400 leading-relaxed whitespace-pre-wrap">
-                                                    {JSON.stringify(selectedOrder.structuredJson, null, 2)}
-                                                </pre>
+                                            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                                                {selectedOrder.structuredJson.items.length > 0 ? (
+                                                    <div className="divide-y divide-slate-100">
+                                                        {selectedOrder.structuredJson.items.map((item, idx) => (
+                                                            <div key={idx} className="p-4 flex items-start justify-between hover:bg-slate-50 transition-colors">
+                                                                <div>
+                                                                    <p className="text-sm font-bold text-slate-900">{item.name}</p>
+                                                                    {item.addons && item.addons.length > 0 && (
+                                                                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+                                                                            + {item.addons.join(", ")}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="text-sm font-black text-slate-900">₹{item.price}</p>
+                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Qty: {item.qty}</p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="p-8 text-center opacity-50">
+                                                        <Receipt size={24} className="text-slate-300 mx-auto mb-2" />
+                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No items ordered</p>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="mt-8 space-y-4">

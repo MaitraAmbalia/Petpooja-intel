@@ -23,28 +23,69 @@ async function syncKOTs() {
     const newOrders = orders.filter(o => !existingOrderIds.has(o.orderId));
     if (newOrders.length === 0) return;
 
-    // Lookup categories for all food items
+    // Lookup categories and actual prices for all food items
     const allFoodIds = [...new Set(newOrders.flatMap(o => o.items.map((i: any) => i.foodId)))];
     const foodItems = await FoodItem.find({ foodId: { $in: allFoodIds } }).lean() as any[];
-    const catMap = new Map(foodItems.map(f => [f.foodId, f.category]));
+    const foodMap = new Map(foodItems.map(f => [f.foodId, f]));
 
     const kotsToInsert: any[] = [];
     let counter = Date.now();
 
     for (const order of newOrders) {
         const groups: Record<string, any[]> = {};
+        let recalculatedTotal = 0;
+        const updatedItems = [];
 
         for (const item of order.items) {
-            const cat = catMap.get(item.foodId) || "Snack";
+            const officialFood = foodMap.get(item.foodId);
+            const cat = officialFood ? officialFood.category : "Snack";
             const station = CATEGORY_STATION[cat] || "Grill";
+
+            // Calculate accurate local price
+            const basePrice = officialFood ? officialFood.price : item.price || 0;
+            let addonsTotal = 0;
+
+            if (officialFood && officialFood.addons && Array.isArray(item.addons)) {
+                item.addons.forEach((addonName: string) => {
+                    const officialAddon = officialFood.addons?.find((a: any) => a.name === addonName);
+                    if (officialAddon) {
+                        addonsTotal += officialAddon.price;
+                    }
+                });
+            }
+
+            const truePrice = basePrice + addonsTotal;
+            const itemQty = item.qty || 1; // Default to 1 if AI missed it
+            const itemTotal = truePrice * itemQty;
+            recalculatedTotal += itemTotal;
+
+            updatedItems.push({
+                ...item,
+                qty: itemQty,
+                price: truePrice,
+                originalAiPrice: item.price
+            });
+
             if (!groups[station]) groups[station] = [];
             groups[station].push({
-                foodId: item.foodId,
+                foodId: item.foodId || "FI_UNKNOWN",
                 name: item.name,
-                qty: item.qty,
+                qty: itemQty,
                 status: "pending",
                 updatedAt: new Date(),
             });
+        }
+
+        // Save the mathematically true total AND precise quantities back into the VoiceOrder permanently
+        if (order.totalPrice !== recalculatedTotal || order.items.some((i: any) => !i.qty)) {
+            await VoiceOrder.findOneAndUpdate(
+                { orderId: order.orderId },
+                {
+                    totalPrice: recalculatedTotal,
+                    items: updatedItems,
+                    aiTotalWasIncorrect: true
+                }
+            );
         }
 
         for (const [station, items] of Object.entries(groups)) {

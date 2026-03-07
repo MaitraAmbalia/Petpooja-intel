@@ -17,8 +17,9 @@ const TranscriptSchema = new Schema<ITranscript>({
     orderId: { type: String },
     timestamp: { type: Date, default: Date.now },
     messages: [{
-        role: { type: String, enum: ["system", "user", "ai", "tool", "human"], required: true },
-        content: { type: String, required: true }
+        speaker: { type: String, enum: ["user", "agent", "system", "tool", "human"], required: true },
+        text: { type: String, required: true },
+        timestamp: { type: Date, default: Date.now }
     }]
 }, { timestamps: true });
 

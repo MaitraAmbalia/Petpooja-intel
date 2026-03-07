@@ -211,23 +211,23 @@ export const getStrategicCombos = (items) => {
 
     // Engine 1: Trio (Snack + Bev + Dessert) - 3 Combos
     const trioEngine = [
-        createCombo([scoredSnacks[0], scoredBeverages[0], scoredDesserts[0]], 0.10, "Supreme Trio I", "High-Performance Stars"),
-        createCombo([scoredSnacks[1], scoredBeverages[1], scoredDesserts[1]], 0.12, "Supreme Trio II", "Balanced Profit Trio"),
-        createCombo([scoredSnacks[2], scoredBeverages[2], scoredDesserts[2]], 0.15, "Supreme Trio III", "High-Margin Potential")
+        createCombo([scoredSnacks[0], scoredBeverages[0], scoredDesserts[0]], 0.05, "Supreme Trio I", "High-Performance Stars"),
+        createCombo([scoredSnacks[1], scoredBeverages[1], scoredDesserts[1]], 0.05, "Supreme Trio II", "Balanced Profit Trio"),
+        createCombo([scoredSnacks[2], scoredBeverages[2], scoredDesserts[2]], 0.05, "Supreme Trio III", "High-Margin Potential")
     ].filter(Boolean);
 
     // Engine 2: Snack + Beverage - 3 Combos
     const snackBevEngine = [
         createCombo([scoredSnacks[0], scoredBeverages[1]], 0.05, "Quick Bite I", "Popularity Driver"),
         createCombo([scoredSnacks[1], scoredBeverages[0]], 0.08, "Quick Bite II", "Margin Optimizer"),
-        createCombo([scoredSnacks[2], scoredBeverages[2]], 0.10, "Quick Bite III", "Refreshment Pair")
+        createCombo([scoredSnacks[2], scoredBeverages[2]], 0.10, "Quick Bite III", "Profit Generator")
     ].filter(Boolean);
 
     // Engine 3: Snack + Dessert - 3 Combos
     const snackDessertEngine = [
-        createCombo([scoredSnacks[0], scoredDesserts[1]], 0.07, "Sweet Treat I", "Afternoon Delights"),
-        createCombo([scoredSnacks[1], scoredDesserts[0]], 0.09, "Sweet Treat II", "Dessert Pairing"),
-        createCombo([scoredSnacks[2], scoredDesserts[2]], 0.11, "Sweet Treat III", "Value Comfort")
+        createCombo([scoredSnacks[0], scoredDesserts[1]], 0.05, "Sweet Treat I", "Popularity Driver"),
+        createCombo([scoredSnacks[1], scoredDesserts[0]], 0.08, "Sweet Treat II", "Margin Optimizer"),
+        createCombo([scoredSnacks[2], scoredDesserts[2]], 0.10, "Sweet Treat III", "Profit Generator")
     ].filter(Boolean);
 
     return {

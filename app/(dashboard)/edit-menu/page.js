@@ -123,8 +123,8 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                             <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Name</label>
                                             <input
                                                 type="text"
-                                                value={editData.foodName}
-                                                onChange={(e) => setEditData({ ...editData, foodName: e.target.value })}
+                                                value={editData.name}
+                                                onChange={(e) => setEditData({ ...editData, name: e.target.value })}
                                                 className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                             />
                                         </div>
@@ -157,33 +157,24 @@ const EditItemModal = ({ item, isOpen, onClose, onSave }) => {
                                     </div>
                                 </div>
 
-                                {/* Cost & Margin */}
                                 <div className="space-y-6">
                                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Financials</h3>
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Food Cost</label>
+                                        <div>
+                                            <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Cost of Production</label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
                                                 <input
                                                     type="number"
-                                                    value={editData.foodCost}
-                                                    onChange={(e) => setEditData({ ...editData, foodCost: parseFloat(e.target.value) })}
-                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="text-xs font-black text-slate-500 uppercase mb-2 block">Op Cost</label>
-                                                <input
-                                                    type="number"
-                                                    value={editData.opCost}
-                                                    onChange={(e) => setEditData({ ...editData, opCost: parseFloat(e.target.value) })}
-                                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
+                                                    value={editData.cost}
+                                                    onChange={(e) => setEditData({ ...editData, cost: parseFloat(e.target.value) || 0 })}
+                                                    className="w-full pl-8 pr-5 py-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-bold text-slate-900"
                                                 />
                                             </div>
                                         </div>
                                         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 flex justify-between items-center">
                                             <span className="text-sm font-bold text-emerald-700 uppercase tracking-wider">Projected Margin</span>
-                                            <span className="text-xl font-black text-emerald-600">₹{(editData.price - editData.foodCost - (editData.opCost || 0)).toFixed(2)}</span>
+                                            <span className="text-xl font-black text-emerald-600">₹{((editData.price || 0) - (editData.cost || 0)).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -408,15 +399,15 @@ export default function EditMenuPage() {
     };
 
     const handleActivateCombo = async (combo) => {
-        const totalFoodCost = combo.items.reduce((acc, i) => acc + (i.foodCost || 0), 0);
+        const totalFoodCost = combo.items.reduce((acc, i) => acc + (i.cost || 0), 0);
         const totalOpCost = combo.items.reduce((acc, i) => acc + (i.opCost || 0), 0);
         const calculatedMargin = combo.discountedPrice - totalFoodCost - totalOpCost;
 
         const newComboItem = {
             foodId: `combo_${Date.now()}`,
-            foodName: combo.name,
+            name: combo.name,
             price: combo.discountedPrice,
-            foodCost: totalFoodCost,
+            cost: totalFoodCost,
             opCost: totalOpCost,
             margin: calculatedMargin,
             category: "Combos",
@@ -448,7 +439,7 @@ export default function EditMenuPage() {
     };
 
     const filteredItems = items.filter(item => {
-        const matchesSearch = item.foodName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === "all" || item.category === catName(selectedCategory);
         return matchesSearch && matchesCategory;
     });
@@ -459,22 +450,8 @@ export default function EditMenuPage() {
     }
 
     const handleToggleStatus = async (item) => {
-        const newStatus = !item.status;
-        try {
-            const res = await fetch('/api/menu', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ foodId: item.foodId, status: newStatus })
-            });
-
-            if (res.ok) {
-                setItems(prev => prev.map(i =>
-                    i.foodId === item.foodId ? { ...i, status: newStatus } : i
-                ));
-            }
-        } catch (error) {
-            console.error("Failed to toggle status:", error);
-        }
+        // Items are active by being in the menu, inactive by being deleted
+        // This function kept for backward compat but toggle UI is removed
     };
 
     const activeItem = filteredItems.find(i => i.foodId === selectedItem?.foodId) || (filteredItems.length > 0 ? filteredItems[0] : null);
@@ -528,9 +505,9 @@ export default function EditMenuPage() {
 
     const openAddModal = () => {
         setSelectedItem({
-            foodName: "",
+            name: "",
             price: 0,
-            foodCost: 0,
+            cost: 0,
             opCost: 0,
             category: CATEGORIES[1]?.name || "Mains",
             dietType: "veg",
@@ -551,14 +528,6 @@ export default function EditMenuPage() {
                         <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Menu Management</h1>
                         <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Configure your restaurant's digital menu with AI insights</p>
                     </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={openAddModal}
-                            className="px-6 py-3 bg-slate-900 text-white rounded-2xl font-black shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2"
-                        >
-                            <Plus size={20} /> Add New Item
-                        </button>
-                    </div>
                 </div>
 
                 {/* Strategic AI Bundles */}
@@ -575,7 +544,7 @@ export default function EditMenuPage() {
 
                     <div className="flex gap-6 overflow-x-auto pb-4 px-2 custom-scrollbar snap-x">
                         {Object.values(STRATEGIC_COMBOS).flat().map((combo, idx) => {
-                            const isAlreadyApplied = items.some(i => i.foodName === combo.name);
+                            const isAlreadyApplied = items.some(i => i.name === combo.name);
                             return (
                                 <motion.div
                                     key={combo.id}
@@ -605,7 +574,7 @@ export default function EditMenuPage() {
                                                     {item.category === 'Beverage' ? '🥤' : item.category === 'Dessert' ? '🍰' : '🍔'}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-slate-900">{item.foodName}</p>
+                                                    <p className="text-sm font-bold text-slate-900">{item.name}</p>
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.category}</p>
                                                 </div>
                                             </div>
@@ -685,13 +654,10 @@ export default function EditMenuPage() {
                                     placeholder="Search your items by name or ID..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-white rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none font-medium transition-all shadow-sm"
+                                    className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700 dark:placeholder-slate-400 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500 outline-none font-medium transition-all shadow-sm"
                                 />
                             </div>
                             <div className="flex gap-2 w-full sm:w-auto">
-                                <button className="flex-1 sm:flex-none px-6 py-3.5 bg-white rounded-2xl border border-slate-200 font-bold text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 transition-all shadow-sm">
-                                    <Filter size={18} /> Advanced
-                                </button>
                                 <button
                                     onClick={openAddModal}
                                     className="flex-1 sm:flex-none px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-sm"
@@ -710,9 +676,9 @@ export default function EditMenuPage() {
                                             <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                             <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Name</th>
                                             <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Price</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Cost</th>
                                             <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Margin</th>
-                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Op Cost</th>
-                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Mark as</th>
+                                            <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
@@ -741,7 +707,7 @@ export default function EditMenuPage() {
                                                         <td className="px-6 py-4">
                                                             <div>
                                                                 <div className="flex items-center gap-2 mb-1">
-                                                                    <span className="font-bold text-slate-900">{item.foodName}</span>
+                                                                    <span className="font-bold text-slate-900">{item.name}</span>
                                                                     <DietBadge type={item.dietType} />
                                                                 </div>
                                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.foodId}</p>
@@ -751,25 +717,13 @@ export default function EditMenuPage() {
                                                             <span className="font-black text-slate-900">₹{item.price?.toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-bold text-emerald-600">₹{item.margin?.toFixed(2)}</span>
+                                                            <span className="font-bold text-slate-500">₹{(item.cost || 0).toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4 text-center">
-                                                            <span className="font-bold text-slate-500">₹{item.opCost?.toFixed(2)}</span>
+                                                            <span className="font-bold text-emerald-600">₹{((item.price || 0) - (item.cost || 0)).toFixed(2)}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="flex items-center justify-end gap-3">
-                                                                <div className="flex items-center gap-2 mr-2">
-                                                                    <span className={`text-[9px] font-black uppercase tracking-tighter ${item.status ? 'text-emerald-500' : 'text-slate-400'}`}>
-                                                                        {item.status ? 'Active' : 'Inactive'}
-                                                                    </span>
-                                                                    <Toggle
-                                                                        active={item.status}
-                                                                        onChange={(e) => {
-                                                                            e.stopPropagation();
-                                                                            handleToggleStatus(item.foodId);
-                                                                        }}
-                                                                    />
-                                                                </div>
+                                                            <div className="flex items-center justify-end gap-2">
                                                                 <button
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();

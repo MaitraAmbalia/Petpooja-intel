@@ -30,11 +30,11 @@ export const RestaurantSchema = {
 
 // Food/Item Schema: Individual items on the menu
 export const FoodItemSchema = {
-    foodName: "String",
+    name: "String",
     foodId: "String",
     price: "Number",
     category: "String", // e.g., Mains, Sides, Drinks
-    foodCost: "Number", // Crucial for Revenue Engine (Selling Price - Food Cost = Margin)
+    cost: "Number", // Crucial for Revenue Engine (Selling Price - Food Cost = Margin)
     margin: "Number", // Selling Price - Food Cost
     opCost: "Number", // Operating cost to prepare/serve this item
     isVeg: "Boolean",

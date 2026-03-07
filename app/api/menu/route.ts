@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
         const body = await req.json();
 
-        if (!body.foodName || body.price === undefined) {
+        if (!body.name || body.price === undefined) {
             return NextResponse.json({ success: false, error: "Please provide essential item details" }, { status: 400 });
         }
 
@@ -37,12 +37,15 @@ export async function POST(req: NextRequest) {
             body.foodId = `sku_${Date.now()}`;
         }
 
-        // Ensure defaults for required fields if they are missing
+        // Calculate margin = price - cost
+        const cost = body.cost || 0;
+        const price = body.price || 0;
+
         const newPayload = {
             ...body,
             category: body.category || "Uncategorized",
-            foodCost: body.foodCost || 0,
-            margin: body.margin || body.price || 0,
+            cost,
+            margin: price - cost,
             isVeg: typeof body.isVeg === 'boolean' ? body.isVeg : true,
             dietType: body.dietType || "veg"
         };
@@ -65,6 +68,16 @@ export async function PUT(req: NextRequest) {
 
         if (!foodId) {
             return NextResponse.json({ success: false, error: "foodId is required to update an item." }, { status: 400 });
+        }
+
+        // Recalculate margin when price or cost changes
+        if (updateData.price !== undefined || updateData.cost !== undefined) {
+            const existing = await FoodItem.findOne({ foodId }).lean() as any;
+            if (existing) {
+                const p = updateData.price ?? existing.price ?? 0;
+                const c = updateData.cost ?? existing.cost ?? 0;
+                updateData.margin = p - c;
+            }
         }
 
         const updatedItem = await FoodItem.findOneAndUpdate(

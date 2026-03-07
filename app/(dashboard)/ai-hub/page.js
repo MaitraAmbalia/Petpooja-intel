@@ -131,7 +131,7 @@ export default function AIHubPage() {
                                     key={i}
                                     type="price"
                                     badge="Margin Analysis"
-                                    title={`Adjust ${item.foodName}`}
+                                    title={`Adjust ${item.name}`}
                                     description={`${opt.suggestion}. Currently "${item.classification}" status with high margin potential.`}
                                     impact="Medium-High"
                                     actionLabel="Review & Update Price"

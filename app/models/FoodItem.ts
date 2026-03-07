@@ -2,43 +2,32 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IFoodItem extends Document {
     foodId: string;
-    foodName: string;
+    name: string;
+    description?: string;
     price: number;
+    cost?: number;
+    margin?: number;
     category: string;
-    foodCost: number;
-    margin: number;
-    opCost?: number;
-    isVeg: boolean;
-    dietType: string;
-    spiceLevel: number;
     popularityScore?: number;
-    orderHistory?: number[];
-    ingredients: { name: string; quantity: string; unit: string }[];
-    variants: { name: string; price: number }[];
-    addons: { name: string; price: number }[];
+    isVeg?: boolean;
+    ingredients?: { name: string; quantity: string; unit: string }[];
+    addons?: { name: string; price: number }[];
 }
 
 const FoodItemSchema = new Schema<IFoodItem>({
     foodId: { type: String, required: true, unique: true },
-    foodName: { type: String, required: true },
+    name: { type: String, required: true },
+    description: { type: String },
     price: { type: Number, required: true },
+    cost: { type: Number },
+    margin: { type: Number },
     category: { type: String, required: true },
-    foodCost: { type: Number, required: true },
-    margin: { type: Number, required: true },
-    opCost: { type: Number },
-    isVeg: { type: Boolean, required: true },
-    dietType: { type: String, required: true },
-    spiceLevel: { type: Number, default: 0 },
-    popularityScore: { type: Number },
-    orderHistory: { type: [Number] },
+    popularityScore: { type: Number, default: 0 },
+    isVeg: { type: Boolean, default: true },
     ingredients: [{
         name: { type: String },
         quantity: { type: String },
         unit: { type: String }
-    }],
-    variants: [{
-        name: { type: String },
-        price: { type: Number }
     }],
     addons: [{
         name: { type: String },

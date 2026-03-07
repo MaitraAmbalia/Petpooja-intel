@@ -6,57 +6,69 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     LayoutDashboard,
     BarChart3,
-    Sparkles,
     UtensilsCrossed,
     PhoneCall,
     LogOut,
-    ChevronDown,
     Menu as MenuIcon,
-    X,
-    Settings,
     Bell,
     Plus,
-    Mic2,
-    Library,
     UserCircle,
     Sun,
     Moon,
     Store,
-    Circle
+    Circle,
+    ChefHat,
+    PanelLeftClose,
+    PanelLeftOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_RESTAURANT } from "@/lib/data-store";
 
-const sidebarGroups = [
-    {
-        title: null,
-        items: [
-            { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-            { name: "Menu", icon: UtensilsCrossed, path: "/edit-menu" },
-            { name: "Orders", icon: PhoneCall, path: "/live-orders", badge: 89 },
-            { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
-            { name: "Teams", icon: UserCircle, path: "/teams" },
-        ]
-    }
+// ─── Sidebar Config by Role ─────────────────────────────────────
+const ADMIN_SIDEBAR = [
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { name: "Menu", icon: UtensilsCrossed, path: "/edit-menu" },
+    { name: "Orders", icon: PhoneCall, path: "/live-orders" },
+    { name: "Kitchen", icon: ChefHat, path: "/kitchen" },
+    { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
+    { name: "Teams", icon: UserCircle, path: "/teams" },
 ];
+
+const STAFF_SIDEBAR = [
+    { name: "Kitchen", icon: ChefHat, path: "/kitchen" },
+];
+
+const ROLE_LABELS = {
+    ADMIN: "Administrator",
+    STAFF: "Kitchen Staff",
+    RESTAURANT_OWNER: "Owner",
+};
+
+const STAFF_DEFAULT_ROUTE = "/kitchen";
+const ADMIN_DEFAULT_ROUTE = "/dashboard";
 
 export default function DashboardLayout({ children }) {
     const { data: session, status } = useSession();
     const router = useRouter();
     const pathname = usePathname();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarPinned, setIsSidebarPinned] = useState(true);
+    const [isSidebarHovered, setIsSidebarHovered] = useState(false);
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    // Determine dark mode state securely after mount
+    // Sidebar is open when pinned OR hovered
+    const isSidebarOpen = isSidebarPinned || isSidebarHovered;
+
     const isDarkMode = mounted && theme === 'dark';
+    const userRole = session?.user?.role || "RESTAURANT_OWNER";
+    const isStaff = userRole === "STAFF";
+    const sidebarItems = isStaff ? STAFF_SIDEBAR : ADMIN_SIDEBAR;
+    const accentColor = isStaff ? "emerald" : "orange";
 
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState([
@@ -75,13 +87,23 @@ export default function DashboardLayout({ children }) {
         }
     }, [status, router]);
 
+    // Auto-redirect staff to kitchen if they land on an admin-only page
+    useEffect(() => {
+        if (status === "authenticated" && isStaff) {
+            const staffPaths = STAFF_SIDEBAR.map(i => i.path);
+            if (!staffPaths.some(p => pathname.startsWith(p))) {
+                router.push(STAFF_DEFAULT_ROUTE);
+            }
+        }
+    }, [status, isStaff, pathname, router]);
+
     if (status === "loading") {
         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-white">
+            <div className="h-screen w-screen flex items-center justify-center bg-white dark:bg-slate-950">
                 <motion.div
                     animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-16 h-1 w-16 bg-orange-500 rounded-full"
+                    className="w-16 h-1 bg-orange-500 rounded-full"
                 />
             </div>
         );
@@ -91,42 +113,100 @@ export default function DashboardLayout({ children }) {
 
     return (
         <div className="flex h-screen bg-[#f8fafc] overflow-hidden text-[#0f172a] font-sans">
-            {/* Restoboard Sidebar */}
+            {/* Sidebar */}
             <motion.aside
                 initial={false}
-                animate={{ width: isSidebarOpen ? 240 : 0 }}
+                animate={{ width: isSidebarOpen ? 250 : 72 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                onMouseEnter={() => setIsSidebarHovered(true)}
+                onMouseLeave={() => setIsSidebarHovered(false)}
                 className={cn(
-                    "flex flex-col border-r z-30 transition-all overflow-hidden",
-                    isDarkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-[#e2e8f0] text-slate-900",
-                    !isSidebarOpen && "border-none"
+                    "flex flex-col border-r z-30 overflow-hidden shrink-0 relative",
+                    isDarkMode ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-[#e2e8f0] text-slate-900"
                 )}
             >
-                <div className="p-6 mb-2">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-orange-500 p-1.5 rounded-lg">
-                            <UtensilsCrossed className="text-white w-5 h-5" />
+                {/* Logo */}
+                <div className={cn("transition-all duration-200", isSidebarOpen ? "p-5 pb-3" : "p-3 pb-2 flex justify-center")}>
+                    <div className={cn("flex items-center", isSidebarOpen ? "gap-3" : "justify-center")}>
+                        <div className={cn(
+                            "p-2 rounded-xl shrink-0 shadow-md transition-shadow",
+                            isStaff ? "bg-emerald-500 shadow-emerald-200 dark:shadow-emerald-900/50" : "bg-orange-500 shadow-orange-200 dark:shadow-orange-900/50"
+                        )}>
+                            {isStaff ? <ChefHat className="text-white w-5 h-5" /> : <UtensilsCrossed className="text-white w-5 h-5" />}
                         </div>
-                        <span className={cn("font-extrabold text-lg tracking-tight", isDarkMode ? "text-white" : "text-slate-900")}>Restoboard</span>
+                        <AnimatePresence>
+                            {isSidebarOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={cn("font-extrabold text-lg tracking-tight whitespace-nowrap", isDarkMode ? "text-white" : "text-slate-900")}
+                                >
+                                    {isStaff ? "Kitchen" : "Restoboard"}
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
 
-                <nav className="flex-1 px-4 overflow-y-auto space-y-1 custom-scrollbar">
-                    {sidebarGroups[0].items.map((item) => {
+                {/* Divider */}
+                <div className={cn("mx-4 mb-2 border-t", isDarkMode ? "border-slate-800" : "border-slate-100")} />
+
+                {/* Nav Items */}
+                <nav className={cn("flex-1 overflow-y-auto space-y-1 custom-scrollbar", isSidebarOpen ? "px-3" : "px-2")}>
+                    {sidebarItems.map((item) => {
                         const isActive = pathname === item.path;
                         return (
-                            <div key={item.path}>
-                                <Link href={item.path}>
+                            <div key={item.path} className="relative">
+                                <Link href={item.path} title={!isSidebarOpen ? item.name : undefined}>
                                     <div className={cn(
-                                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all group cursor-pointer font-medium text-sm",
+                                        "flex items-center rounded-xl cursor-pointer font-medium text-[13px] transition-all duration-200 relative",
+                                        isSidebarOpen ? "gap-3 px-3 py-2.5" : "justify-center px-2 py-2.5",
                                         isActive
-                                            ? "bg-orange-500 text-white shadow-lg shadow-orange-100 dark:shadow-none"
-                                            : cn("transition-all", isDarkMode ? "text-slate-400 hover:text-white hover:bg-slate-800" : "text-slate-500 hover:text-slate-900 hover:bg-slate-50")
+                                            ? cn(
+                                                isDarkMode ? "bg-slate-800" : "bg-slate-50",
+                                                isStaff ? "text-emerald-500" : "text-orange-500"
+                                            )
+                                            : cn(
+                                                isDarkMode
+                                                    ? "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
+                                            )
                                     )}>
-                                        <item.icon size={20} className={cn(isActive ? "text-white" : (isDarkMode ? "text-slate-500 group-hover:text-slate-300" : "text-slate-400 group-hover:text-slate-600"))} />
-                                        <span>{item.name}</span>
-                                        {item.badge && (
-                                            <span className="ml-auto bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-lg text-[10px] font-bold">{item.badge}</span>
+                                        {/* Active indicator bar */}
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeTab"
+                                                className={cn(
+                                                    "absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full",
+                                                    isStaff ? "bg-emerald-500" : "bg-orange-500"
+                                                )}
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                            />
                                         )}
+                                        <item.icon
+                                            size={20}
+                                            className={cn(
+                                                "shrink-0 transition-colors duration-200",
+                                                isActive
+                                                    ? (isStaff ? "text-emerald-500" : "text-orange-500")
+                                                    : (isDarkMode ? "text-slate-500 group-hover:text-slate-300" : "text-slate-400")
+                                            )}
+                                        />
+                                        <AnimatePresence>
+                                            {isSidebarOpen && (
+                                                <motion.span
+                                                    initial={{ opacity: 0, x: -8 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: -8 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className={cn("whitespace-nowrap", isActive && "font-semibold")}
+                                                >
+                                                    {item.name}
+                                                </motion.span>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 </Link>
                             </div>
@@ -134,10 +214,34 @@ export default function DashboardLayout({ children }) {
                     })}
                 </nav>
 
-                <div className="p-4">
-                    <Button variant="ghost" onClick={() => signOut({ callbackUrl: "/login" })} className={cn("w-full justify-start gap-3 rounded-xl transition-all", isDarkMode ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-400 hover:text-red-500 hover:bg-red-50")}>
-                        <LogOut size={20} />
-                        <span className="text-sm font-medium">Log out</span>
+                {/* Divider */}
+                <div className={cn("mx-4 mt-2 border-t", isDarkMode ? "border-slate-800" : "border-slate-100")} />
+
+                {/* Logout */}
+                <div className={cn("transition-all duration-200", isSidebarOpen ? "p-3" : "p-2")}>
+                    <Button
+                        variant="ghost"
+                        onClick={() => signOut({ callbackUrl: "/login" })}
+                        title={!isSidebarOpen ? "Log out" : undefined}
+                        className={cn(
+                            "w-full rounded-xl transition-all duration-200",
+                            isSidebarOpen ? "justify-start gap-3 px-3" : "justify-center px-2",
+                            isDarkMode ? "text-slate-400 hover:text-red-400 hover:bg-red-500/10" : "text-slate-400 hover:text-red-500 hover:bg-red-50"
+                        )}
+                    >
+                        <LogOut size={20} className="shrink-0" />
+                        <AnimatePresence>
+                            {isSidebarOpen && (
+                                <motion.span
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="text-sm font-medium whitespace-nowrap"
+                                >
+                                    Log out
+                                </motion.span>
+                            )}
+                        </AnimatePresence>
                     </Button>
                 </div>
             </motion.aside>
@@ -148,22 +252,30 @@ export default function DashboardLayout({ children }) {
                     "h-16 border-b flex items-center justify-between px-8 relative z-20 transition-all duration-300",
                     isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-[#e2e8f0]"
                 )}>
-                    <div className="flex items-center gap-6 flex-1">
-                        <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(!isSidebarOpen)} className={isDarkMode ? "text-slate-500" : "text-slate-400"}>
-                            <div className={cn("p-1.5 rounded-full", isDarkMode ? "bg-slate-800" : "bg-slate-100")}>
-                                <Plus size={16} className={cn("transition-transform", isSidebarOpen ? "rotate-45" : "rotate-0")} />
+                    <div className="flex items-center gap-6">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setIsSidebarPinned(!isSidebarPinned)}
+                            title={isSidebarPinned ? "Unpin sidebar" : "Pin sidebar"}
+                            className={cn(
+                                "transition-all",
+                                isDarkMode ? "text-slate-500 hover:text-slate-300" : "text-slate-400 hover:text-slate-600"
+                            )}
+                        >
+                            <div className={cn("p-1.5 rounded-full transition-colors", isDarkMode ? "bg-slate-800" : "bg-slate-100")}>
+                                {isSidebarPinned ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
                             </div>
                         </Button>
+                    </div>
 
-                        <div className="flex items-center gap-2">
-                            <div className="bg-orange-500 p-1.5 rounded-lg shadow-lg shadow-orange-100">
-                                <Store className="text-white w-4 h-4" />
-                            </div>
-                            <span className={cn("font-black tracking-tight text-lg", isDarkMode ? "text-white" : "text-slate-900")}>
-                                {MOCK_RESTAURANT.name}
-                            </span>
+                    <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                        <div className={cn("p-1.5 rounded-lg shadow-lg", isStaff ? "bg-emerald-500 shadow-emerald-100" : "bg-orange-500 shadow-orange-100")}>
+                            <Store className="text-white w-4 h-4" />
                         </div>
-
+                        <span className={cn("font-black tracking-tight text-lg", isDarkMode ? "text-white" : "text-slate-900")}>
+                            {session.user.name || "My Restaurant"}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -228,7 +340,7 @@ export default function DashboardLayout({ children }) {
 
                         <div className="h-8 w-px bg-slate-100 mx-2 hidden sm:block" />
 
-                        {/* Premium User Profile Section */}
+                        {/* User Profile Section */}
                         <div className={cn(
                             "flex items-center gap-3 p-1 pl-3 pr-2 rounded-2xl transition-all border",
                             isDarkMode ? "bg-slate-800/50 border-slate-700" : "bg-slate-50/50 border-slate-100"
@@ -236,13 +348,15 @@ export default function DashboardLayout({ children }) {
                             <div className="text-right hidden sm:block">
                                 <p className={cn("text-xs font-black tracking-tight", isDarkMode ? "text-white" : "text-slate-900")}>{session.user.name}</p>
                                 <div className="flex items-center justify-end gap-1.5">
-                                    <Circle size={4} className="fill-orange-500 text-orange-500" />
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Administrator</p>
+                                    <Circle size={4} className={cn("fill-current", isStaff ? "text-emerald-500" : "text-orange-500")} />
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                        {ROLE_LABELS[userRole] || userRole}
+                                    </p>
                                 </div>
                             </div>
                             <Avatar className="w-10 h-10 border-2 border-white shadow-sm">
                                 <AvatarImage src={session.user.image} />
-                                <AvatarFallback className="bg-orange-500 text-white text-xs font-black">{session.user.name?.[0]}</AvatarFallback>
+                                <AvatarFallback className={cn("text-white text-xs font-black", isStaff ? "bg-emerald-500" : "bg-orange-500")}>{session.user.name?.[0]}</AvatarFallback>
                             </Avatar>
                         </div>
                     </div>

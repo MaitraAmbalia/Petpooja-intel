@@ -1,51 +1,45 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IVoiceOrder extends Document {
-    id: string; // E.g. VO_1001
+    orderId: string;
+    phoneNo: string;
+    customerName?: string;
+    orderType: string; // "delivery", "pickup", "dine-in"
+    address?: string;
     time: string;
-    customer: string;
-    phoneNumber: string;
-    transactionId: string;
-    invoiceNo: string;
-    transcript: string;
-    structuredJson: {
-        items: {
-            name: string;
-            qty: number;
-            price: number;
-            variant?: string;
-            addons?: string[];
-        }[];
-        total: number;
-    };
-    status: string;
-    kotStatus: string;
-    aiUpsell: string;
-    callType: string;
+    status: string; // default "pending", then "complete"
+    kotStatus: string; // default "pending"
+    items: {
+        foodId: string;
+        name: string;
+        qty: number;
+        price: number;
+        addons?: string[];
+    }[];
+    totalPrice: number;
+    callSuccessful: boolean;
+    upsellSuccessful: boolean;
 }
 
 const VoiceOrderSchema = new Schema<IVoiceOrder>({
-    id: { type: String, required: true, unique: true },
+    orderId: { type: String, required: true, unique: true },
+    phoneNo: { type: String, required: true },
+    customerName: { type: String },
+    orderType: { type: String, default: "pickup" },
+    address: { type: String },
     time: { type: String },
-    customer: { type: String },
-    phoneNumber: { type: String },
-    transactionId: { type: String },
-    invoiceNo: { type: String },
-    transcript: { type: String },
-    structuredJson: {
-        items: [{
-            name: { type: String },
-            qty: { type: Number },
-            price: { type: Number },
-            variant: { type: String },
-            addons: { type: [String] }
-        }],
-        total: { type: Number }
-    },
-    status: { type: String },
-    kotStatus: { type: String },
-    aiUpsell: { type: String },
-    callType: { type: String }
+    status: { type: String, default: "pending" },
+    kotStatus: { type: String, default: "pending" },
+    items: [{
+        foodId: { type: String, required: true },
+        name: { type: String, required: true },
+        qty: { type: Number, required: true },
+        price: { type: Number, required: true },
+        addons: { type: [String] }
+    }],
+    totalPrice: { type: Number, required: true },
+    callSuccessful: { type: Boolean, default: false },
+    upsellSuccessful: { type: Boolean, default: false }
 }, { timestamps: true });
 
 const VoiceOrder = mongoose.models.VoiceOrder || mongoose.model<IVoiceOrder>("VoiceOrder", VoiceOrderSchema);

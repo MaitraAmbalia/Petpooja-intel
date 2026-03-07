@@ -34,6 +34,15 @@ export const authOptions: NextAuthOptions = {
                     };
                 }
 
+                if (credentials.email.toLowerCase() === "staff@petpooja.com" && credentials.password === "staff123") {
+                    return {
+                        id: "2",
+                        name: "Kitchen Staff",
+                        email: "staff@petpooja.com",
+                        role: "STAFF",
+                    };
+                }
+
                 await connectDB();
 
                 const user = await User.findOne({ email: credentials.email.toLowerCase() });

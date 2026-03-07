@@ -17,18 +17,84 @@ import {
     Receipt,
     Phone,
     CornerUpRight,
-    Search
+    Search,
+    Loader2,
+    RefreshCw
 } from "lucide-react";
-import { VOICE_ORDERS, CALL_ANALYTICS } from "@/lib/data-store";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-const CallAnalyticsStats = () => (
+const POLL_INTERVAL = 5000; // 5 seconds
+
+// Map DB order to UI shape
+function mapOrderToUI(dbOrder) {
+    const createdAt = dbOrder.createdAt ? new Date(dbOrder.createdAt) : new Date();
+    const timeStr = createdAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+
+    // Determine call type from DB fields
+    let callType = "AI_SUCCESS";
+    let status = "COMPLETED";
+    if (dbOrder.status === "pending") {
+        status = "PENDING_CALLBACK";
+        callType = "CALLBACK";
+    } else if (!dbOrder.callSuccessful) {
+        status = "TRANSFERRED";
+        callType = "HUMAN_TRANSFER";
+    }
+
+    // KOT status mapping
+    const kotMap = { pending: "PENDING", preparing: "PREPARING", ready: "READY", complete: "READY" };
+    const kotStatus = kotMap[dbOrder.kotStatus?.toLowerCase()] || "NONE";
+
+    // Build transcript text from messages
+    const transcriptMessages = dbOrder.transcript?.messages || [];
+    const customerMessages = transcriptMessages.filter(m => m.role === "user").map(m => m.text);
+    const transcriptText = customerMessages.join(" | ") || "No transcript available";
+
+    // AI upsell detection from transcript
+    const aiMessages = transcriptMessages.filter(m => m.role === "ai");
+    const upsellMsg = aiMessages.find(m =>
+        m.text.toLowerCase().includes("would you like") ||
+        m.text.toLowerCase().includes("combo") ||
+        m.text.toLowerCase().includes("add")
+    );
+    const aiUpsell = upsellMsg
+        ? (dbOrder.upsellSuccessful ? `Upsell Accepted` : `Upsell Suggested`)
+        : "None";
+
+    return {
+        id: dbOrder.orderId || dbOrder._id,
+        time: timeStr,
+        customer: dbOrder.customerName || "Unknown Customer",
+        phoneNumber: dbOrder.phoneNo || "N/A",
+        transactionId: `TXN_${dbOrder.orderId?.slice(-6) || "000000"}`,
+        invoiceNo: `INV-${createdAt.getFullYear()}-${String(dbOrder.orderId?.slice(-3) || "000").padStart(3, "0")}`,
+        transcript: transcriptText,
+        transcriptMessages: transcriptMessages,
+        structuredJson: {
+            items: (dbOrder.items || []).map(i => ({
+                name: i.name,
+                qty: i.qty,
+                price: i.price,
+                addons: i.addons || [],
+            })),
+            total: dbOrder.totalPrice || 0,
+        },
+        status,
+        kotStatus,
+        aiUpsell,
+        callType,
+        orderType: dbOrder.orderType || "pickup",
+        address: dbOrder.address || "",
+    };
+}
+
+const CallAnalyticsStats = ({ analytics, loading }) => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-            { label: "Total Calls", value: CALL_ANALYTICS.totalCalls, icon: PhoneIncoming, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Successful", value: CALL_ANALYTICS.successfulCalls, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "Human Transfers", value: CALL_ANALYTICS.humanTransfers, icon: Headphones, color: "text-orange-600", bg: "bg-orange-50" },
-            { label: "Pending Callbacks", value: CALL_ANALYTICS.pendingCallbacks, icon: Clock, color: "text-rose-600", bg: "bg-rose-50" },
+            { label: "Total Calls", value: analytics.totalCalls, icon: PhoneIncoming, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "Successful", value: analytics.successfulCalls, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "Human Transfers", value: analytics.humanTransfers, icon: Headphones, color: "text-orange-600", bg: "bg-orange-50" },
+            { label: "Pending", value: analytics.pendingCallbacks, icon: Clock, color: "text-rose-600", bg: "bg-rose-50" },
         ].map((stat, i) => (
             <div key={i} className="glass p-5 rounded-[24px] border border-slate-200/50 shadow-sm flex items-center gap-4">
                 <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color}`}>
@@ -36,7 +102,9 @@ const CallAnalyticsStats = () => (
                 </div>
                 <div>
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                    <h3 className="text-xl font-black text-slate-900">{stat.value}</h3>
+                    <h3 className="text-xl font-black text-slate-900">
+                        {loading ? <span className="animate-pulse">—</span> : stat.value}
+                    </h3>
                 </div>
             </div>
         ))}
@@ -100,7 +168,45 @@ const OrderCard = ({ order, isActive, onClick }) => {
 };
 
 export default function LiveOrdersPage() {
-    const [selectedOrder, setSelectedOrder] = useState(VOICE_ORDERS[0]);
+    const [orders, setOrders] = useState([]);
+    const [analytics, setAnalytics] = useState({ totalCalls: 0, successfulCalls: 0, humanTransfers: 0, pendingCallbacks: 0 });
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [lastUpdated, setLastUpdated] = useState(null);
+
+    const fetchOrders = useCallback(async () => {
+        try {
+            const res = await fetch("/api/orders?limit=50");
+            const json = await res.json();
+            if (json.success) {
+                const mapped = json.data.map(mapOrderToUI);
+                setOrders(mapped);
+                setAnalytics(json.analytics);
+                setLastUpdated(new Date());
+
+                // Auto-select first order if none selected
+                setSelectedOrder(prev => {
+                    if (!prev && mapped.length > 0) return mapped[0];
+                    // Keep current selection if it still exists
+                    if (prev) {
+                        const stillExists = mapped.find(o => o.id === prev.id);
+                        return stillExists || (mapped.length > 0 ? mapped[0] : null);
+                    }
+                    return prev;
+                });
+            }
+        } catch (err) {
+            console.error("Failed to fetch orders:", err);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchOrders();
+        const interval = setInterval(fetchOrders, POLL_INTERVAL);
+        return () => clearInterval(interval);
+    }, [fetchOrders]);
 
     return (
         <DashboardLayout>
@@ -108,34 +214,53 @@ export default function LiveOrdersPage() {
                 <div className="flex justify-between items-end">
                     <div>
                         <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Live Orders & Voice Analytics</h1>
-                        <p className="text-slate-500 dark:text-slate-400 font-medium">Monitoring real-time AI and Human call performance</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">
+                            Monitoring real-time AI and Human call performance
+                            {lastUpdated && (
+                                <span className="ml-3 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                    Updated {lastUpdated.toLocaleTimeString()}
+                                </span>
+                            )}
+                        </p>
                     </div>
                     <div className="flex gap-2">
-                        <button className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2">
-                            <Search size={18} /> Search Transcripts
+                        <button
+                            onClick={fetchOrders}
+                            className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2"
+                        >
+                            <RefreshCw size={16} /> Refresh
                         </button>
                     </div>
                 </div>
 
-                <CallAnalyticsStats />
+                <CallAnalyticsStats analytics={analytics} loading={loading} />
 
                 <div className="flex-1 flex gap-8 overflow-hidden">
                     {/* Order List */}
                     <div className="w-80 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
-                        {VOICE_ORDERS.map((order) => (
-                            <OrderCard
-                                key={order.id}
-                                order={order}
-                                isActive={selectedOrder?.id === order.id}
-                                onClick={() => setSelectedOrder(order)}
-                            />
-                        ))}
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center py-16 gap-3">
+                                <Loader2 size={24} className="text-orange-500 animate-spin" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading orders...</p>
+                            </div>
+                        ) : orders.length > 0 ? (
+                            orders.map((order) => (
+                                <OrderCard
+                                    key={order.id}
+                                    order={order}
+                                    isActive={selectedOrder?.id === order.id}
+                                    onClick={() => setSelectedOrder(order)}
+                                />
+                            ))
+                        ) : null}
 
                         <div className="p-6 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center text-center gap-3 opacity-50">
                             <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
                                 <Clock size={20} />
                             </div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Waiting for calls...</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                {orders.length === 0 && !loading ? "No orders yet" : "Waiting for calls..."}
+                            </p>
                         </div>
                     </div>
 
@@ -164,7 +289,7 @@ export default function LiveOrdersPage() {
                                                     </p>
                                                     <div className="w-1 h-1 rounded-full bg-slate-200" />
                                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                        <Clock size={12} className="text-blue-500" /> Duration: 1m 12s
+                                                        <Clock size={12} className="text-blue-500" /> {selectedOrder.orderType}
                                                     </p>
                                                 </div>
                                             </div>
@@ -183,20 +308,19 @@ export default function LiveOrdersPage() {
                                     <div className="px-8 py-3 bg-slate-50 border-b border-slate-100 flex gap-8">
                                         <div className="flex items-center gap-2">
                                             <Hash size={12} className="text-slate-400" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Txn ID:</span>
-                                            <span className="text-[10px] font-bold text-slate-900">{selectedOrder.transactionId}</span>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Order ID:</span>
+                                            <span className="text-[10px] font-bold text-slate-900">{selectedOrder.id}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Receipt size={12} className="text-slate-400" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Invoice:</span>
-                                            <span className="text-[10px] font-bold text-slate-900">{selectedOrder.invoiceNo}</span>
+                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Type:</span>
+                                            <span className="text-[10px] font-bold text-slate-900 capitalize">{selectedOrder.orderType}</span>
                                         </div>
                                         <div className="ml-auto flex items-center gap-2">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">AI Confidence:</span>
-                                            <div className="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                                                <div className="h-full bg-emerald-500 w-[94%]" />
-                                            </div>
-                                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider">94%</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Upsell:</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-wider ${selectedOrder.aiUpsell !== "None" ? "text-emerald-600" : "text-slate-400"}`}>
+                                                {selectedOrder.aiUpsell}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -207,37 +331,41 @@ export default function LiveOrdersPage() {
                                                 <MessageSquare size={14} /> Voice-to-Text Transcript
                                             </h4>
                                             <div className="space-y-6">
-                                                <div className="flex gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-orange-100 shrink-0 flex items-center justify-center text-orange-600 text-[10px] font-black">AI</div>
-                                                    <div className="bg-orange-50 p-4 rounded-2xl rounded-tl-none border border-orange-100 max-w-[80%]">
-                                                        <p className="text-sm font-medium text-orange-900 leading-relaxed">
-                                                            Hello! Welcome to Petpooja Kitchen. What can I get for you today?
-                                                        </p>
+                                                {selectedOrder.transcriptMessages && selectedOrder.transcriptMessages.length > 0 ? (
+                                                    selectedOrder.transcriptMessages.map((msg, idx) => (
+                                                        <div key={idx} className={`flex gap-4 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+                                                            <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[10px] font-black ${msg.role === "ai"
+                                                                ? "bg-orange-100 text-orange-600"
+                                                                : "bg-slate-200 text-slate-600 italic"
+                                                                }`}>
+                                                                {msg.role === "ai" ? "AI" : "CU"}
+                                                            </div>
+                                                            <div className={`p-4 rounded-2xl max-w-[80%] ${msg.role === "ai"
+                                                                ? "bg-orange-50 rounded-tl-none border border-orange-100"
+                                                                : "bg-white rounded-tr-none border border-slate-200 shadow-sm"
+                                                                }`}>
+                                                                <p className={`text-sm font-medium leading-relaxed ${msg.role === "ai"
+                                                                    ? "text-orange-900"
+                                                                    : "text-slate-700 italic"
+                                                                    }`}>
+                                                                    {msg.role === "user" ? `"${msg.text}"` : msg.text}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-center py-12 opacity-40">
+                                                        <MessageSquare size={32} className="text-slate-300 mx-auto mb-3" />
+                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No transcript available</p>
                                                     </div>
-                                                </div>
-                                                <div className="flex gap-4 flex-row-reverse">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0 flex items-center justify-center text-slate-600 text-[10px] font-black italic">CU</div>
-                                                    <div className="bg-white p-4 rounded-2xl rounded-tr-none border border-slate-200 shadow-sm max-w-[80%]">
-                                                        <p className="text-sm font-medium text-slate-700 leading-relaxed italic">
-                                                            "{selectedOrder.transcript}"
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-orange-100 shrink-0 flex items-center justify-center text-orange-600 text-[10px] font-black">AI</div>
-                                                    <div className="bg-orange-50 p-4 rounded-2xl rounded-tl-none border border-orange-100 max-w-[80%]">
-                                                        <p className="text-sm font-medium text-orange-900 leading-relaxed font-bold italic">
-                                                            {selectedOrder.aiUpsell}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
                                         </div>
 
                                         {/* JSON Output Section */}
                                         <div className="w-80 border-l border-slate-100 bg-slate-50/50 p-8 overflow-y-auto custom-scrollbar">
                                             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                                <FileJson size={14} /> PoS Payload (JSON)
+                                                <FileJson size={14} /> Order Payload (JSON)
                                             </h4>
                                             <div className="bg-slate-900 p-6 rounded-2xl shadow-inner relative group">
                                                 <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-50 transition-opacity">
@@ -253,10 +381,24 @@ export default function LiveOrdersPage() {
                                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Final Bill</p>
                                                     <h5 className="text-xl font-black text-slate-900">₹{selectedOrder.structuredJson.total.toFixed(2)}</h5>
                                                 </div>
-                                                <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-                                                    <CheckCircle2 size={20} className="text-emerald-500" />
-                                                    <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Sync Successful</span>
-                                                </div>
+                                                {selectedOrder.status === "COMPLETED" && (
+                                                    <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
+                                                        <CheckCircle2 size={20} className="text-emerald-500" />
+                                                        <span className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Order Confirmed</span>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.status === "PENDING_CALLBACK" && (
+                                                    <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                                                        <Clock size={20} className="text-amber-500" />
+                                                        <span className="text-xs font-bold text-amber-700 uppercase tracking-wide">Pending Callback</span>
+                                                    </div>
+                                                )}
+                                                {selectedOrder.status === "TRANSFERRED" && (
+                                                    <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center gap-3">
+                                                        <Headphones size={20} className="text-orange-500" />
+                                                        <span className="text-xs font-bold text-orange-700 uppercase tracking-wide">Human Transfer</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -266,7 +408,7 @@ export default function LiveOrdersPage() {
                                     <PhoneIncoming size={64} className="text-slate-300 mb-6" />
                                     <h3 className="text-2xl font-bold text-slate-900">No active calls</h3>
                                     <p className="text-slate-500 font-medium max-w-sm mt-2">
-                                        Select an order from the list to view transcripts and PoS payload integration details.
+                                        {loading ? "Loading orders from database..." : "Select an order from the list to view transcripts and order details."}
                                     </p>
                                 </div>
                             )}

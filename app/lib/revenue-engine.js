@@ -14,8 +14,8 @@ import { FoodItemSchema, ComboSchema } from "./schemas";
  * @returns {number}
  */
 export const calculateMargin = (item) => {
-    if (!item.price || !item.foodCost) return 0;
-    return item.price - item.foodCost;
+    if (!item.price || !item.cost) return 0;
+    return item.price - item.cost;
 };
 
 /**
@@ -89,7 +89,7 @@ export const recommendCombos = (classifiedItems, orderHistory) => {
         const matchingWorkhorse = workhorses[0]; // Simplification for logic flow
         if (matchingWorkhorse) {
             recommendations.push({
-                name: `${challenge.foodName} & ${matchingWorkhorse.foodName} Combo`,
+                name: `${challenge.name} & ${matchingWorkhorse.name} Combo`,
                 items: [challenge.foodId, matchingWorkhorse.foodId],
                 suggestedPrice: (challenge.price + matchingWorkhorse.price) * 0.9, // 10% discount
                 profitImpact: "High",
@@ -188,6 +188,14 @@ export const getStrategicCombos = (items) => {
         const baseMargin = comboItems.reduce((acc, i) => acc + i.margin, 0);
         const discountAmount = basePrice * discount;
 
+        // Weighted Average Popularity — each item contributes proportionally to its price share
+        const weightedPopularity = basePrice > 0
+            ? comboItems.reduce((acc, i) => {
+                const priceWeight = i.price / basePrice;
+                return acc + ((i.popularityScore || i.wma || 0) * priceWeight);
+            }, 0)
+            : 0;
+
         return {
             id: `combo_${Math.random().toString(36).substr(2, 9)}`,
             name: `${nameSuffix} Bundle`,
@@ -197,6 +205,7 @@ export const getStrategicCombos = (items) => {
             basePrice: Number(basePrice.toFixed(2)),
             discountedPrice: Number((basePrice - discountAmount).toFixed(2)),
             newMargin: Number((baseMargin - discountAmount).toFixed(2)),
+            popularityScore: Number(weightedPopularity.toFixed(2)),
         };
     };
 

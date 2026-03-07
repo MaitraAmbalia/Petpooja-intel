@@ -68,7 +68,9 @@ const MetricCard = ({ title, value, subValue, trend, icon: Icon, isActive, onCli
 );
 
 export default function DashboardPage() {
-    const sortedByPopularity = [...PROCESSED_MENU].sort((a, b) => b.popularityScore - a.popularityScore);
+    // Exclude Add-ons from performer rankings — they inflate due to order frequency but aren't standalone dishes
+    const mainMenuItems = PROCESSED_MENU.filter(item => item.category !== "Add-on");
+    const sortedByPopularity = [...mainMenuItems].sort((a, b) => b.popularityScore - a.popularityScore);
     const bestSeller = sortedByPopularity[0];
     const worstSeller = sortedByPopularity[sortedByPopularity.length - 1];
 
@@ -312,7 +314,7 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🔥</div>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{bestSeller.foodName}</p>
+                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{bestSeller.name}</p>
                                                 <p className="text-xs text-slate-500 font-medium mt-1">Pop: {bestSeller.popularityScore.toFixed(2)}</p>
                                             </div>
                                         </div>
@@ -328,7 +330,7 @@ export default function DashboardPage() {
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none flex items-center justify-center text-xl transition-colors">🧊</div>
                                             <div className="min-w-0">
-                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{worstSeller.foodName}</p>
+                                                <p className="text-sm font-semibold truncate leading-tight tracking-tight">{worstSeller.name}</p>
                                                 <p className="text-xs text-slate-500 font-medium mt-1">Pop: {worstSeller.popularityScore.toFixed(2)}</p>
                                             </div>
                                         </div>

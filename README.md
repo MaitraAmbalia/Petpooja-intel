@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<div align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Burger_King_2020.svg" alt="Petpooja Copilot" width="80" />
+  <h1>🍔 Petpooja-Copilot</h1>
+  <p><em>An intelligent, real-time Voice AI & Kitchen Display operational dashboard built for modern restaurants.</em></p>
 
-## Getting Started
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="TailwindCSS" />
+    <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+    <img src="https://img.shields.io/badge/Framer_Motion-white?style=for-the-badge&logo=framer" alt="Framer Motion" />
+    <img src="https://img.shields.io/badge/NextAuth.js-blueviolet?style=for-the-badge&logo=next.js&logoColor=white" alt="NextAuth" />
+  </p>
+</div>
 
-First, run the development server:
+---
+
+## � Dashboard Previews
+
+<div align="center">
+  <img src="public/github_assets/dashboard.png" alt="Dashboard Overview" width="800" style="border-radius: 8px; margin-bottom: 20px;" />
+  <img src="public/github_assets/live_orders.png" alt="Live Orders System" width="800" style="border-radius: 8px; margin-bottom: 20px;" />
+  <img src="public/github_assets/kitchen.png" alt="Kitchen Display (KOT)" width="800" style="border-radius: 8px;" />
+</div>
+
+---
+
+## �🚀 Features at a Glance
+
+* **🎙️ Live Voice Orders:** Monitor incoming AI calls, view live customer-AI transcripts, and track success/failure rates.
+* **👨‍🍳 Real-Time KOT System:** Kitchen Order Tickets automatically sync to specific stations (e.g. Grill, Drinks) with dynamic SLA countdown timers.
+* **📊 Dashboard Analytics:** Visualize your daily revenue targets, recent order volumes, and system-wide performance scores instantly.
+* **🎯 Unit Profitability Analysis:** Automatically identify your menu's **Stars**, **Workhorses**, **Challenges**, and **Dogs** to maximize long-term margin.
+* **🔐 Role-Based Routing:** Seamlessly redirect Admins to configuration dashboards, while locking Kitchen Staff purely to the Kitchen Display screen.
+
+---
+
+## 🛠️ Technology Stack
+
+| Role            | Technology                               | Link / Purpose                                                                       |
+| :---            | :---                                     | :---                                                                                 |
+| **Core**        | [Next.js App Router](https://nextjs.org) | SSR, Routing, and Turbopack compiler.                                                |
+| **Styling**     | [Tailwind CSS](https://tailwindcss.com/) | rapid, customizable utility classes.                                                 |
+| **UI Components**| [shadcn/ui](https://ui.shadcn.com/)      | Radix Primitives + Tailwind Merge.                                                   |
+| **Database**    | [Mongoose](https://mongoosejs.com/)      | MongoDB driver handling Models, Webhooks, and KOT generation triggers.               |
+| **Charts**      | [Recharts](https://recharts.org/)        | D3.js based customizable analytics dashboards.                                       |
+
+---
+
+## ⚙️ Quick Start Installation
+
+### 1️⃣ Clone and Install
+First, navigate into the project directory and install the required dependencies:
+
+```bash
+cd petpooja
+npm install
+```
+
+### 2️⃣ Environment Variables
+Create a `.env` file in the root of the project (next to `package.json`). Below is the required configuration template:
+
+```env
+# URL for NextAuth configuration (Required for Google Auth redirects)
+NEXTAUTH_URL=http://localhost:3000
+
+# Strong random string to encrypt user session cookies (e.g. generated via `openssl rand -base64 32`)
+NEXTAUTH_SECRET=<your_strong_random_secret_string>
+
+# Primary Database Connection
+MONGODB_URI=<your_primary_mongodb_connection_string>
+
+# Google Cloud OAuth 2.0 Credentials
+GOOGLE_CLIENT_ID=<your_google_oauth_client_id>
+GOOGLE_CLIENT_SECRET=<your_google_oauth_client_secret>
+
+# Environment indicator
+NODE_ENV=development
+```
+> **💡 Tip:** The application automatically connects to a secondary `petpooja_db` instance extracted from your primary connection string to parse external Voice AI webhooks. 
+
+### 3️⃣ Start the Dashboard
+To start the Next.js server with Turbopack enabled:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You can now hit **`http://localhost:3000`** in your browser!
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔑 Authentication Access
 
-## Learn More
+The application utilizes **NextAuth.js**. A user must be authenticated to access the dashboard.
+If you are developing locally or need to test specific Role-Based access, use the following credentials:
 
-To learn more about Next.js, take a look at the following resources:
+### 👑 Administrator Account
+*Access: Full access to Dashboard, Menu Editing, Analytics, and Live Transcripts.*
+- **Email:** `admin@petpooja.com`
+- **Password:** `admin123`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 👨‍🍳 Kitchen Staff Account
+*Access: Restricted specifically to the Kitchen Display panel to view live KOTs. All other routes bounce back to `/kitchen`.*
+- **Email:** `staff@petpooja.com`
+- **Password:** `staff123`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+<p align="center">
+  Built securely bridging modern Voice AI agents into native restaurant Kitchen Display systems.
+</p>

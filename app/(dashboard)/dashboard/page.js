@@ -273,7 +273,7 @@ export default function DashboardPage() {
                                             dx={-10}
                                         />
                                         <Tooltip
-                                            formatter={(value) => [`$${Number(value).toFixed(2)}`, ""]}
+                                            formatter={(value) => [`₹${Number(value).toFixed(2)}`, ""]}
                                             contentStyle={{
                                                 borderRadius: '16px',
                                                 border: '1px solid #f1f5f9',

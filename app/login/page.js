@@ -34,7 +34,7 @@ export default function LoginPage() {
             });
 
             if (result.error) {
-                setError("Invalid credentials. Try admin@petpooja.com / admin123");
+                setError("Invalid credentials. Try admin@petpooja.com / admin123  OR  staff@petpooja.com / staff123");
             } else {
                 router.push("/dashboard");
             }

@@ -19,7 +19,8 @@ import {
     Circle,
     ChefHat,
     PanelLeftClose,
-    PanelLeftOpen
+    PanelLeftOpen,
+    Activity
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
@@ -36,6 +37,7 @@ const ADMIN_SIDEBAR = [
     { name: "Orders", icon: PhoneCall, path: "/live-orders" },
     { name: "Kitchen", icon: ChefHat, path: "/kitchen" },
     { name: "Analytics", icon: BarChart3, path: "/menu-analytics" },
+    { name: "Unit Analysis", icon: Activity, path: "/unit-analysis" },
     { name: "Teams", icon: UserCircle, path: "/teams" },
 ];
 

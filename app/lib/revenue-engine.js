@@ -21,10 +21,10 @@ export const calculateMargin = (item) => {
 /**
  * Classifies menu items based on popularity and profitability.
  * 
- * - Star: High Profit, High Popularity
- * - Workhorse: Low Profit, High Popularity
- * - Challenge: High Profit, Low Popularity (Under-promoted)
- * - Dog: Low Profit, Low Popularity (Underperforming)
+ * - Hero Item: High Profit, High Popularity
+ * - Volume Driver: Low Profit, High Popularity
+ * - Hidden Gem: High Profit, Low Popularity (Under-promoted)
+ * - Underperformer: Low Profit, Low Popularity
  * 
  * @param {Array} items - Array of items with calculated margins and sales data
  * @param {number} avgMargin - Mean margin across menu
@@ -43,13 +43,13 @@ export const classifyMenuItems = (items, avgMargin, avgPopularity) => {
         let classification = "";
 
         if (margin >= avgMargin && popularityScore >= avgPopularity) {
-            classification = "Star";
+            classification = "Hero Item";
         } else if (margin < avgMargin && popularityScore >= avgPopularity) {
-            classification = "Workhorse";
+            classification = "Volume Driver";
         } else if (margin >= avgMargin && popularityScore < avgPopularity) {
-            classification = "Challenge";
+            classification = "Hidden Gem";
         } else {
-            classification = "Dog";
+            classification = "Underperformer";
         }
 
         return { ...item, margin, popularityScore, classification };
@@ -61,37 +61,37 @@ export const classifyMenuItems = (items, avgMargin, avgPopularity) => {
  */
 export const detectRiskyItems = (classifiedItems) => {
     return classifiedItems.filter(item => {
-        // High volume but very thin margins (Workhorses that might become losses if food cost rises)
-        const isRiskyWorkhorse = item.classification === "Workhorse" && (item.margin / item.price) < 0.15;
-        // Underperforming Dog items
-        const isUnderperformingDog = item.classification === "Dog";
+        // High volume but very thin margins (Volume Drivers that might become losses if food cost rises)
+        const isRiskyVolumeDriver = item.classification === "Volume Driver" && (item.margin / item.price) < 0.15;
+        // Underperforming items
+        const isUnderperformer = item.classification === "Underperformer";
 
-        return isRiskyWorkhorse || isUnderperformingDog;
+        return isRiskyVolumeDriver || isUnderperformer;
     });
 };
 
 /**
  * Association Analysis (Simplified Basket Analysis)
- * Recommends combos by pairing 'Challenges' (high profit) with 'Workhorses' (high popularity).
+ * Recommends combos by pairing 'Hidden Gems' (high profit) with 'Volume Drivers' (high popularity).
  * 
  * @param {Array} classifiedItems - Array of items with calculated margins and classification
  * @param {Array} orderHistory - Order history data (not fully utilized in this simplified example)
  * @returns {Array} Recommended combos
  */
 export const recommendCombos = (classifiedItems, orderHistory) => {
-    const workhorses = classifiedItems.filter(i => i.classification === "Workhorse");
-    const challenges = classifiedItems.filter(i => i.classification === "Challenge");
+    const volumeDrivers = classifiedItems.filter(i => i.classification === "Volume Driver");
+    const hiddenGems = classifiedItems.filter(i => i.classification === "Hidden Gem");
 
     const recommendations = [];
 
     // Simple strategy: Bundle a popular item with an under-promoted high-margin item
-    challenges.forEach(challenge => {
-        const matchingWorkhorse = workhorses[0]; // Simplification for logic flow
-        if (matchingWorkhorse) {
+    hiddenGems.forEach(gem => {
+        const matchingDriver = volumeDrivers[0]; // Simplification for logic flow
+        if (matchingDriver) {
             recommendations.push({
-                name: `${challenge.name} & ${matchingWorkhorse.name} Combo`,
-                items: [challenge.foodId, matchingWorkhorse.foodId],
-                suggestedPrice: (challenge.price + matchingWorkhorse.price) * 0.9, // 10% discount
+                name: `${gem.name} & ${matchingDriver.name} Combo`,
+                items: [gem.foodId, matchingDriver.foodId],
+                suggestedPrice: (gem.price + matchingDriver.price) * 0.9, // 10% discount
                 profitImpact: "High",
                 reason: "Pairs a popular staple with a high-margin specialty."
             });
@@ -113,15 +113,15 @@ export const getPriceOptimization = (item) => {
     let confidence = "";
 
     // Quantitative Price Elasticity Model
-    if (item.classification === "Star") {
+    if (item.classification === "Hero Item") {
         suggestedPrice = Number((item.price * 1.05).toFixed(2)); // +5% (Inelastic demand)
         suggestion = "Increase price (+5%)";
         confidence = "High";
-    } else if (item.classification === "Workhorse") {
+    } else if (item.classification === "Volume Driver") {
         suggestedPrice = Number((item.price * 1.02).toFixed(2)); // +2% (Price sensitive)
         suggestion = "Slight increase (+2%)";
         confidence = "Medium";
-    } else if (item.classification === "Challenge") {
+    } else if (item.classification === "Hidden Gem") {
         suggestedPrice = Number((item.price * 0.95).toFixed(2)); // -5% (Promotional to drive volume)
         suggestion = "Discount (-5%)";
         confidence = "High";

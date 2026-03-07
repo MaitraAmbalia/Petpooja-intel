@@ -166,9 +166,9 @@ export default function MenuAnalyticsPage() {
                                                     <Cell
                                                         key={`cell-${index}`}
                                                         fill={
-                                                            entry.classification === "Star" ? "#10b981" :
-                                                                entry.classification === "Challenge" ? "#f97316" :
-                                                                    entry.classification === "Workhorse" ? "#0ea5e9" : "#94a3b8"
+                                                            entry.classification === "Hero Item" ? "#10b981" :
+                                                                entry.classification === "Hidden Gem" ? "#f97316" :
+                                                                    entry.classification === "Volume Driver" ? "#0ea5e9" : "#94a3b8"
                                                         }
                                                         r={7}
                                                     />
@@ -181,10 +181,10 @@ export default function MenuAnalyticsPage() {
                                 {/* Legend */}
                                 <div className="flex flex-wrap gap-4 mt-2">
                                     {[
-                                        { label: 'Star', color: '#10b981', desc: 'High Profit + High Pop' },
-                                        { label: 'Workhorse', color: '#0ea5e9', desc: 'Low Profit + High Pop' },
-                                        { label: 'Challenge', color: '#f97316', desc: 'High Profit + Low Pop' },
-                                        { label: 'Dog', color: '#94a3b8', desc: 'Low Profit + Low Pop' },
+                                        { label: 'Hero Item', color: '#10b981', desc: 'High Profit + High Pop' },
+                                        { label: 'Volume Driver', color: '#0ea5e9', desc: 'Low Profit + High Pop' },
+                                        { label: 'Hidden Gem', color: '#f97316', desc: 'High Profit + Low Pop' },
+                                        { label: 'Underperformer', color: '#94a3b8', desc: 'Low Profit + Low Pop' },
                                     ].map(({ label, color, desc }) => (
                                         <div key={label} className="flex items-center gap-2">
                                             <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
@@ -201,10 +201,10 @@ export default function MenuAnalyticsPage() {
                                     <h3 className="text-base font-bold text-slate-900 dark:text-white mb-3 italic">SKU Health Summary</h3>
                                     <div className="space-y-2">
                                         {[
-                                            { label: 'High Velocity (Stars)', count: processedMenu.filter(i => i.classification === 'Star').length, color: 'emerald', hex: '#10b981' },
-                                            { label: 'Under-promoted (Challenges)', count: processedMenu.filter(i => i.classification === 'Challenge').length, color: 'orange', hex: '#f97316' },
-                                            { label: 'Volume Staple (Workhorses)', count: processedMenu.filter(i => i.classification === 'Workhorse').length, color: 'blue', hex: '#0ea5e9' },
-                                            { label: 'Underperforming (Dogs)', count: processedMenu.filter(i => i.classification === 'Dog').length, color: 'slate', hex: '#94a3b8' },
+                                            { label: 'Hero Items', count: processedMenu.filter(i => i.classification === 'Hero Item').length, color: 'emerald', hex: '#10b981' },
+                                            { label: 'Hidden Gems', count: processedMenu.filter(i => i.classification === 'Hidden Gem').length, color: 'orange', hex: '#f97316' },
+                                            { label: 'Volume Drivers', count: processedMenu.filter(i => i.classification === 'Volume Driver').length, color: 'blue', hex: '#0ea5e9' },
+                                            { label: 'Underperformers', count: processedMenu.filter(i => i.classification === 'Underperformer').length, color: 'slate', hex: '#94a3b8' },
                                         ].map((stat, i) => (
                                             <div key={i} className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                                                 <div className="flex items-center gap-2.5">
@@ -225,9 +225,9 @@ export default function MenuAnalyticsPage() {
                                     <h3 className="text-base font-bold mb-3 italic">Price Optimization</h3>
                                     <div className="space-y-2 relative z-10">
                                         {[
-                                            { color: 'emerald', label: 'Stars (High Demand)', text: 'Inelastic demand detected. Consider a +5% to +8% price increase to maximize margins.' },
-                                            { color: 'blue', label: 'Workhorses (Staples)', text: 'Highly price sensitive. Maintain pricing but optimize supply chain food costs.' },
-                                            { color: 'orange', label: 'Challenges (High Profit)', text: 'Bundle with Workhorses or run promotions to boost trial rates and ticket size.' },
+                                            { color: 'emerald', label: 'Hero Items (High Demand)', text: 'Inelastic demand detected. Consider a +5% to +8% price increase to maximize margins.' },
+                                            { color: 'blue', label: 'Volume Drivers (Staples)', text: 'Highly price sensitive. Maintain pricing but optimize supply chain food costs.' },
+                                            { color: 'orange', label: 'Hidden Gems (High Profit)', text: 'Bundle with Volume Drivers or run promotions to boost trial rates and ticket size.' },
                                         ].map(({ color, label, text }) => (
                                             <div key={label} className="bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/5">
                                                 <div className="flex items-center gap-2 mb-1.5">
@@ -314,10 +314,10 @@ export default function MenuAnalyticsPage() {
                                                     <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{(item.popularityScore || 0).toFixed(2)}</span>
                                                 </td>
                                                 <td className="px-8 py-6">
-                                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl ${item.classification === "Star" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                                            item.classification === "Challenge" ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                                                item.classification === "Workhorse" ? "bg-blue-50 text-blue-600 border border-blue-100" :
-                                                                    "bg-slate-50 text-slate-400 border border-slate-100"
+                                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl ${item.classification === "Hero Item" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
+                                                        item.classification === "Hidden Gem" ? "bg-orange-50 text-orange-600 border border-orange-100" :
+                                                            item.classification === "Volume Driver" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                                                "bg-slate-50 text-slate-400 border border-slate-100"
                                                         }`}>
                                                         {item.classification}
                                                     </span>

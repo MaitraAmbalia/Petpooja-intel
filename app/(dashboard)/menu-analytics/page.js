@@ -122,7 +122,7 @@ export default function MenuAnalyticsPage() {
 
                                 <div className="h-[450px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <ScatterChart margin={{ top: 20, right: 30, bottom: 50, left: 30 }}>
+                                        <ScatterChart margin={{ top: 20, right: 30, bottom: 50, left: 40 }}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                             <XAxis
                                                 type="number"
@@ -131,14 +131,16 @@ export default function MenuAnalyticsPage() {
                                                 domain={[0, maxPop]}
                                                 label={{ value: 'Popularity Score →', position: 'insideBottom', offset: -15, fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
                                                 tickFormatter={v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}
+                                                tickMargin={10}
                                             />
                                             <YAxis
                                                 type="number"
                                                 dataKey="margin"
                                                 name="Profit Margin"
-                                                unit="₹"
+                                                tickFormatter={(v) => `₹${v}`}
                                                 domain={[0, maxMargin]}
-                                                label={{ value: 'Margin (₹) →', angle: -90, position: 'insideLeft', offset: 15, fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+                                                label={{ value: 'Margin (₹) →', angle: -90, position: 'insideLeft', offset: 25, fill: '#94a3b8', fontSize: 11, fontWeight: 700 }}
+                                                tickMargin={10}
                                             />
                                             {/* Quadrant dividers at average values */}
                                             <ReferenceLine x={avgPopVal} stroke="#cbd5e1" strokeDasharray="6 3" strokeWidth={1.5} />
@@ -272,7 +274,7 @@ export default function MenuAnalyticsPage() {
                                 <table className="w-full text-left">
                                     <thead>
                                         <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                                            {['Item Name', 'Cost / Price', 'Margin %', 'Velocity', 'Classification', 'Suggested Price'].map(h => (
+                                            {['Item Name', 'Cost / Price', 'Margin %', 'Classification', 'Suggested Price'].map(h => (
                                                 <th key={h} className="px-8 py-5 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{h}</th>
                                             ))}
                                         </tr>
@@ -310,9 +312,7 @@ export default function MenuAnalyticsPage() {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-6">
-                                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{(item.popularityScore || 0).toFixed(2)}</span>
-                                                </td>
+
                                                 <td className="px-8 py-6">
                                                     <span className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-xl ${item.classification === "Hero Item" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
                                                         item.classification === "Hidden Gem" ? "bg-orange-50 text-orange-600 border border-orange-100" :

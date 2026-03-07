@@ -92,7 +92,11 @@ You can now hit **`http://localhost:3000`** in your browser!
 ## 🔑 Authentication Access
 
 The application utilizes **NextAuth.js**. A user must be authenticated to access the dashboard.
-If you are developing locally or need to test specific Role-Based access, use the following credentials:
+
+### 🌐 Live Demo
+You can try the live application here: **[https://petpooja-intel.vercel.app](https://petpooja-intel.vercel.app)**
+
+If you are exploring the live demo or developing locally and need to test specific Role-Based access, use the following credentials:
 
 ### 👑 Administrator Account
 *Access: Full access to Dashboard, Menu Editing, Analytics, and Live Transcripts.*

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Burger_King_2020.svg" alt="Petpooja Copilot" width="80" />
+  <img src="public/github_assets/logo.svg" alt="Petpooja Copilot" width="80" />
   <h1>🍔 Petpooja-Copilot</h1>
   <p><em>An intelligent, real-time Voice AI & Kitchen Display operational dashboard built for modern restaurants.</em></p>
 

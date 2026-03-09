@@ -34,6 +34,29 @@
 
 ---
 
+## 🏗️ System Architecture
+
+* **Client**: Next.js App Router serving both the Web Dashboard and Kitchen Display interfaces.
+* **Authentication**: NextAuth.js validating secure sessions and enforcing strict Role-Based Access Control.
+* **Backend APIs**: Built-in Next.js REST API routes (`/api/*`) handling business logic and external webhooks.
+* **Database**: MongoDB paired with Mongoose managing schemas, complex queries, and live operational data.
+* **External Integrations**: Voice AI callers interacting with the server via structured webhook triggers.
+
+---
+
+## 🔌 API Reference
+
+The core application exposes the following internal endpoints for the dashboard and external AI webhooks:
+
+| Endpoint           | Supported Methods                  | Description                                                                 |
+| :---               | :---                               | :---                                                                        |
+| `/api/menu`        | `GET`, `POST`, `PUT`, `DELETE`     | Retrieve and manage restaurant menu items, categories, and availability.  |
+| `/api/kot`         | `GET`, `PUT`                       | Fetch live Kitchen Order Tickets and update station preparation statuses. |
+| `/api/orders`      | `GET`                              | Query finalized daily orders, revenue metrics, and items sold.              |
+| `/api/transcripts` | `GET`                              | Access live customer-to-AI voice call conversation logs.                    |
+
+---
+
 ## 🛠️ Technology Stack
 
 | Role            | Technology                               | Link / Purpose                                                                       |
@@ -95,6 +118,16 @@ The application utilizes **NextAuth.js**. A user must be authenticated to access
 
 ### 🌐 Live Demo
 You can try the live application here: **[https://petpooja-intel.vercel.app](https://petpooja-intel.vercel.app)**
+
+### 🛡️ Role-Based Access Control (RBAC) Matrix
+
+| Feature / Route        | 👑 Administrator | 👨‍🍳 Kitchen Staff |
+| :---                   | :---:            | :---:              |
+| **Dashboard Home**     | ✅               | ❌ *(Redirected)*  |
+| **Menu & Pricing**     | ✅               | ❌ *(Redirected)*  |
+| **Analytics Engine**   | ✅               | ❌ *(Redirected)*  |
+| **Live Voice Orders**  | ✅               | ❌ *(Redirected)*  |
+| **Kitchen Display**    | ✅               | ✅                 |
 
 If you are exploring the live demo or developing locally and need to test specific Role-Based access, use the following credentials:
 

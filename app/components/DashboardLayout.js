@@ -62,7 +62,6 @@ export default function DashboardLayout({ children }) {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
-    // Sidebar is open when pinned OR hovered
     const isSidebarOpen = isSidebarPinned || isSidebarHovered;
 
     const isDarkMode = mounted && theme === 'dark';
@@ -88,7 +87,6 @@ export default function DashboardLayout({ children }) {
         }
     }, [status, router]);
 
-    // Auto-redirect staff to kitchen if they land on an admin-only page
     useEffect(() => {
         if (status === "authenticated" && isStaff) {
             const staffPaths = STAFF_SIDEBAR.map(i => i.path);
